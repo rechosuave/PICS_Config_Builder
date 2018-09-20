@@ -1,84 +1,82 @@
 
-Imports Office = Microsoft.Office.Interop
 Imports Excel = Microsoft.Office.Interop.Excel
 
 Module ImportData
 
-    Sub Button_Data_And_Run(ByRef wb As Workbook)
+    Sub Button_Data_And_Run()
 
-        Call Button_Import_Data(wb)
+        'Select and open the Excel project file (PLC IO Mapping) that will be used to create PICS simulation files
+        Dim XLProjectWB = OpenXLProjectFN()
 
-        wb.Application.ScreenUpdating = False
+        'Create or update the Excel PICS Config file that will organize all data
+        Call Button_Import_Data(XLProjectWB)
 
-        Call Generate_Sim_Data(wb)
-        Call Generate_Memory_Data(wb)
-        Call Generate_Wire_Data(wb)
+        'XLWrkBook.Application.ScreenUpdating = False
 
-        Dim outFolder As String
-        outFolder = Create_Output_Folder(wb)
+        'Call Generate_Sim_Data(XLWrkBook)
+        'Call Generate_Memory_Data(XLWrkBook)
+        'Call Generate_Wire_Data(XLWrkBook)
 
-        Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
-        Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
-        Call Export_Wire_Data(wb, outFolder)
+        'Dim outFolder As String
+        'outFolder = Create_Output_Folder(XLWrkBook)
 
-        wb.Application.ScreenUpdating = False
+        'Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
+        'Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
+        'Call Export_Wire_Data(XLWrkBook, outFolder)
+
+        'XLWrkBook.Application.ScreenUpdating = False
+        'XLApp.Quit()
 
     End Sub
 
-    Sub Button_Import_Data(ByRef wb As Workbook)
+    Sub Button_Import_Data(ByRef xlProjectWB As Workbook)
 
-        Dim projectfN As String
-        Dim picsBuilder As String
-        Dim projectBuilder As String
-        Dim cpuImport As String
+        'Create an Excel PICS Config file
+        'Dim projectfN, picsBuilder, projectBuilder, cpuImport As String
 
-        wb.Application.ScreenUpdating = False
+        'wb.Application.ScreenUpdating = False
+        'wb.Application.DisplayAlerts = False 'Turn safety alerts OFF
 
-        wb.Application.DisplayAlerts = False 'Turn safety alerts OFF
+        'Call Unhide_All_Sheets(wb)
 
-        Call Unhide_All_Sheets(wb)
+        'Dim ws As Worksheet = wb.Sheets("IO Sheets").Select
+        'ws.Range("A2:AA9999").Clear()
 
-        Dim ws As Worksheet = wb.Sheets("IO Sheets").Select
-        ws.Range("A2:AA9999").Clear()
+        'picsBuilder = wb.Name
 
-        picsBuilder = wb.Name
+        'Dim xlApp As New Excel.Application
+        'Dim xlProjectWorkBook As Workbook = xlApp.Workbooks.Open(projectfN)
 
-        projectfN = GetProjectFN()
-        If projectfN = Nothing Then Exit Sub
+        'projectBuilder = xlProjectWorkBook.Name
 
-        Dim xlApp As New Excel.Application
-        Dim xlProjectWorkBook As Workbook = xlApp.Workbooks.Open(projectfN)
+        'cpuImport = xlProjectWorkBook.Sheets("Instructions").Range("C3").Value
+        'xlProjectWorkBook.Sheets("IO Sheets").UsedRange.Copy
 
-        projectBuilder = xlProjectWorkBook.Name
+        '' Paste entire IO sheet
+        'wb.Activate()
+        'ws = wb.Sheets("IO Sheets").Select
+        'ws.Range("A1").PasteSpecial.xlPasteValues
 
-        cpuImport = xlProjectWorkBook.Sheets("Instructions").Range("C3").Value
-        xlProjectWorkBook.Sheets("IO Sheets").UsedRange.Copy
+        '' Remove any white space at the top
+        'Do While ws.Range("A1").Value <> "PLCBaseTag"
+        '    ws.Range("A1").EntireRow.Delete()
+        'Loop
 
-        ' Paste entire IO sheet
-        wb.Activate()
-        ws = wb.Sheets("IO Sheets").Select
-        ws.Range("A1").PasteSpecial.xlPasteValues
+        '' Fix all selections to look nice
+        'If wb.Sheets("Instructions").Range("CPU_PREFIX").Value = "" Then
+        '    wb.Sheets("Instructions").Range("CPU_PREFIX").Value = cpuImport
+        'End If
 
-        ' Remove any white space at the top
-        Do While ws.Range("A1").Value <> "PLCBaseTag"
-            ws.Range("A1").EntireRow.Delete()
-        Loop
+        'Reset_Sheet(wb, "Instructions")
+        'Reset_Sheet(wb, "IO Sheets")
+        'ws = wb.Sheets("Instructions").Select
 
-        ' Fix all selections to look nice
-        If wb.Sheets("Instructions").Range("CPU_PREFIX").Value = "" Then
-            wb.Sheets("Instructions").Range("CPU_PREFIX").Value = cpuImport
-        End If
+        'Call Hide_Sheets(wb)
 
-        Reset_Sheet(wb, "Instructions")
-        Reset_Sheet(wb, "IO Sheets")
-        ws = wb.Sheets("Instructions").Select
+        'xlProjectWorkBook.Close(SaveChanges:=False)
+        'wb.Application.DisplayAlerts = True 'Turn safety alerts ON
 
-        Call Hide_Sheets(wb)
-
-        xlProjectWorkBook.Close(SaveChanges:=False)
-        wb.Application.DisplayAlerts = True 'Turn safety alerts ON
-
-        wb.Application.ScreenUpdating = True
+        'wb.Application.ScreenUpdating = True
 
     End Sub
 
@@ -127,11 +125,33 @@ Module ImportData
         openFileDialog1.RestoreDirectory = True
 
         If (openFileDialog1.ShowDialog() = DialogResult.OK) Then
-            GetProjectFN = openFileDialog1.FileName
+            Return openFileDialog1.FileName
         Else
-            GetProjectFN = Nothing
+            Return Nothing
 
         End If
 
     End Function
+
+    Function OpenXLProjectFN()
+
+        'Select and open the Excel project file (PLC IO Mapping) that will be used to create PICS simulation files
+        Dim XLApp As Excel.Application
+        Dim XLWrkBook As Excel.Workbook
+        Dim XLWrkSheet As Excel.Worksheet
+        Dim FileName As String
+        Dim title = "Open - Select Project Config File"
+        Dim fnXtnFilter = "Excel Files (*.xls;*.xlsm),*.xls;*xlsm"
+
+        XLApp = CType(CreateObject("Excel.Application"), Excel.Application)
+        FileName = XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title)
+        XLWrkBook = XLApp.Workbooks.Open(FileName)
+        XLWrkSheet = XLWrkBook.ActiveSheet
+
+        XLWrkSheet.Visible = True
+        '        XLWrkBook.UserControl = True
+        Return XLWrkBook
+
+    End Function
+
 End Module

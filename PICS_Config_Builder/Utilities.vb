@@ -50,6 +50,11 @@ Module Utilities
         Clear_Sheet_Type(wrkBook, "")
 
     End Sub
+    Public Sub Clear_All_Sheets()
+
+
+    End Sub
+
 
 
     Public Sub Reset_Sheet(ByRef wrkBook As Workbook, sheet As String)
