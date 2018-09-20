@@ -1,105 +1,137 @@
-Sub Button_Import_Data(ByRef x As Integer)
-    Dim CopiedSheet As Worksheet
-    Dim x As Integer
-    Dim fName As String
-    Dim picsBuilder As String
-    Dim projectBuilder As String
-    Dim cpuImport As String
 
-    Application.ScreenUpdating = False
+Imports Office = Microsoft.Office.Interop
+Imports Excel = Microsoft.Office.Interop.Excel
 
-    Application.DisplayAlerts = False 'Turn safety alerts OFF
+Module ImportData
 
-    Call Unhide_All_Sheets()
+    Sub Button_Data_And_Run(ByRef wb As Workbook)
 
-    Sheets("IO Sheets").Select
-    Range("A2:AA9999").Clear
+        Call Button_Import_Data(wb)
 
-    picsBuilder = ActiveWorkbook.Name
+        wb.Application.ScreenUpdating = False
 
-    fName = Application.GetOpenFilename("Excel files(*.xls; *.xlsm), *.xls;*.xlsm", 2, "Select a Project Config file.")
-    If fName = "" Or fName = "False" Then Exit Sub
+        Call Generate_Sim_Data(wb)
+        Call Generate_Memory_Data(wb)
+        Call Generate_Wire_Data(wb)
 
-    Workbooks.Open(fName)
-    projectBuilder = ActiveWorkbook.Name
+        Dim outFolder As String
+        outFolder = Create_Output_Folder(wb)
 
-    cpuImport = Sheets("Instructions").Range("C3").Value
-    Sheets("IO Sheets").UsedRange.Copy
+        Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
+        Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
+        Call Export_Wire_Data(wb, outFolder)
 
-    ' Paste entire IO sheet
-    Workbooks(picsBuilder).Activate
-    Sheets("IO Sheets").Select
-    Range("A1").PasteSpecial(Paste:=xlValues)
+        wb.Application.ScreenUpdating = False
 
-    ' Remove any white space at the top
-    Do While Range("A1") <> "PLCBaseTag"
-        Range("A1").EntireRow.Delete
-    Loop
+    End Sub
 
-    ' Fix all selections to look nice
-    If Sheets("Instructions").Range("CPU_PREFIX").Value = "" Then
-        Sheets("Instructions").Range("CPU_PREFIX").Value = cpuImport
-    End If
+    Sub Button_Import_Data(ByRef wb As Workbook)
 
-    Reset_Sheet("Instructions")
-    Reset_Sheet("IO Sheets")
-    Sheets("Instructions").Select
+        Dim projectfN As String
+        Dim picsBuilder As String
+        Dim projectBuilder As String
+        Dim cpuImport As String
 
-    Call Hide_Sheets()
+        wb.Application.ScreenUpdating = False
 
-    Workbooks(projectBuilder).Close(SaveChanges:=False)
-    Application.DisplayAlerts = True 'Turn safety alerts ON
+        wb.Application.DisplayAlerts = False 'Turn safety alerts OFF
 
-    Application.ScreenUpdating = True
+        Call Unhide_All_Sheets(wb)
 
-End Sub
+        Dim ws As Worksheet = wb.Sheets("IO Sheets").Select
+        ws.Range("A2:AA9999").Clear()
 
-Sub Button_Data_And_Run(ByRef x As Integer)
+        picsBuilder = wb.Name
 
-    Call Button_Import_Data()
+        projectfN = GetProjectFN()
+        If projectfN = Nothing Then Exit Sub
 
-    Application.ScreenUpdating = False
+        Dim xlApp As New Excel.Application
+        Dim xlProjectWorkBook As Workbook = xlApp.Workbooks.Open(projectfN)
 
-    Call Generate_Sim_Data()
-    Call Generate_Memory_Data()
-    Call Generate_Wire_Data()
+        projectBuilder = xlProjectWorkBook.Name
 
-    Dim outFolder As String
-    outFolder = Create_Output_Folder()
+        cpuImport = xlProjectWorkBook.Sheets("Instructions").Range("C3").Value
+        xlProjectWorkBook.Sheets("IO Sheets").UsedRange.Copy
 
-    Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
-    Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
-    Call Export_Wire_Data(outFolder)
+        ' Paste entire IO sheet
+        wb.Activate()
+        ws = wb.Sheets("IO Sheets").Select
+        ws.Range("A1").PasteSpecial.xlPasteValues
 
-    Application.ScreenUpdating = False
+        ' Remove any white space at the top
+        Do While ws.Range("A1").Value <> "PLCBaseTag"
+            ws.Range("A1").EntireRow.Delete()
+        Loop
 
-End Sub
+        ' Fix all selections to look nice
+        If wb.Sheets("Instructions").Range("CPU_PREFIX").Value = "" Then
+            wb.Sheets("Instructions").Range("CPU_PREFIX").Value = cpuImport
+        End If
 
-Sub Button_Clear_All_Sheets(ByRef x As Integer)
-    '
-    '
-    '
-    'WARNING! This will clear all the data delete all Wire sheets
-    If MsgBox("WARNING! This will clear all the data from this workbook and delete existing Wire data sheets.", vbOKCancel) = vbCancel Then Exit Sub
+        Reset_Sheet(wb, "Instructions")
+        Reset_Sheet(wb, "IO Sheets")
+        ws = wb.Sheets("Instructions").Select
 
-    Application.ScreenUpdating = False
+        Call Hide_Sheets(wb)
 
-    Call Button_Unhide_All_Sheets()
+        xlProjectWorkBook.Close(SaveChanges:=False)
+        wb.Application.DisplayAlerts = True 'Turn safety alerts ON
 
-    Clear_All_Sheets
+        wb.Application.ScreenUpdating = True
 
-    Call Delete_Wire_Sheets("Wire_AIn Template")
-    Call Delete_Wire_Sheets("Wire_DIn Template")
-    Call Delete_Wire_Sheets("Wire_ValveC Template")
-    Call Delete_Wire_Sheets("Wire_ValveMO Template")
-    Call Delete_Wire_Sheets("Wire_ValveSO Template")
-    Call Delete_Wire_Sheets("Wire_Motor Template")
-    Call Delete_Wire_Sheets("Wire_VSD Template")
+    End Sub
 
-    Call Button_Hide_Sheets()
-    Sheets("Instructions").Range("CPU_PREFIX").ClearContents
+    Sub Button_Clear_All_Sheets(ByRef wrkBook As Workbook)
+        '
+        'WARNING!!! This will clear all data AND delete all Wire sheets
+        If MsgBox("WARNING! This will clear all data from this workbook and delete existing Wire data sheets.", vbOKCancel) = vbCancel Then Exit Sub
 
-    Application.ScreenUpdating = True
+        wrkBook.Application.ScreenUpdating = False
 
-End Sub
+        Call Button_Unhide_All_Sheets(wrkBook)
 
+        Clear_All_Sheets(wrkBook)
+
+        Call Delete_Wire_Sheets(wrkBook, "Wire_AIn Template")
+        Call Delete_Wire_Sheets(wrkBook, "Wire_DIn Template")
+        Call Delete_Wire_Sheets(wrkBook, "Wire_ValveC Template")
+        Call Delete_Wire_Sheets(wrkBook, "Wire_ValveMO Template")
+        Call Delete_Wire_Sheets(wrkBook, "Wire_ValveSO Template")
+        Call Delete_Wire_Sheets(wrkBook, "Wire_Motor Template")
+        Call Delete_Wire_Sheets(wrkBook, "Wire_VSD Template")
+
+        Call Button_Hide_Sheets(wrkBook)
+        wrkBook.Sheets("Instructions").Range("CPU_PREFIX").ClearContents
+
+        wrkBook.Application.ScreenUpdating = True
+
+    End Sub
+
+    Public Function GetProjectFN() As String
+        ' OpenFile method used to quickly open a file from the dialog box. 
+        ' The file Is opened In read-only mode For security purposes. 
+        ' To open a file In read/write mode, you must use another method, such as FileStream.
+
+        Dim title, fnXtnFilter As String
+
+        title = "Select Project Config File"
+        fnXtnFilter = "Excel files (*.xls;*.xlsm)"
+
+        Dim openFileDialog1 = New OpenFileDialog()
+
+        openFileDialog1.Title = title
+        openFileDialog1.InitialDirectory = "c:\\"
+        openFileDialog1.Filter = fnXtnFilter
+        openFileDialog1.FilterIndex = 2
+        openFileDialog1.RestoreDirectory = True
+
+        If (openFileDialog1.ShowDialog() = DialogResult.OK) Then
+            GetProjectFN = openFileDialog1.FileName
+        Else
+            GetProjectFN = Nothing
+
+        End If
+
+    End Function
+End Module

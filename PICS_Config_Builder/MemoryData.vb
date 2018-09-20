@@ -1,504 +1,521 @@
-Sub Generate_Memory_Data(ByRef x As Integer)
 
-    Call Unhide_All_Sheets
+Imports Office = Microsoft.Office.Interop
+Imports Excel = Microsoft.Office.Interop.Excel
 
-    Call Clear_Sheet_Type("MemoryData")
-    Call Clear_Sheet_Type("IOMem")
+Module MemoryData
 
-    Call Generate_AI_Memory("IOTags - AIn", "IOMem - AIn")
-    Call Generate_DI_Memory("IOTags - DIn", "IOMem - DIn")
-    Call Generate_ValvesC_Memory("IOTags - ValveC", "IOMem - ValveC")
-    Call Generate_ValvesMO_Memory("IOTags - ValveMO", "IOMem - ValveMO")
-    Call Generate_ValvesSO_Memory("IOTags - ValveSO", "IOMem - ValveSO")
-    Call Generate_Motor_Memory("IOTags - Motor", "IOMem - Motor")
-    Call Generate_VSD_Memory("IOTags - VSD", "IOMem - VSD")
+    Const xlPasteValues As Integer = Microsoft.Office.Interop.Excel.XlPasteType.xlPasteValues
 
-    Call Remove_From_Descriptions()
-    Call Rem_Spaces("IOMem - AIn", "F")
-    Call Rem_Spaces("IOMem - DIn", "F")
-    Call Rem_Spaces("IOMem - ValveC", "F")
-    Call Rem_Spaces("IOMem - ValveMO", "F")
-    Call Rem_Spaces("IOMem - ValveSO", "F")
-    Call Rem_Spaces("IOMem - Motor", "F")
-    Call Rem_Spaces("IOMem - VSD", "F")
+    Sub Generate_Memory_Data(ByRef wrkBook As Workbook)
 
-    Call Copy_Memory_Data()
+        Call Unhide_All_Sheets(wrkBook)
 
-    Sheets("Instructions").Select
+        Call Clear_Sheet_Type(wrkBook, "MemoryData")
+        Call Clear_Sheet_Type(wrkBook, "IOMem")
 
-    Call Hide_Sheets
+        Call Generate_AI_Memory(wrkBook, "IOTags - AIn", "IOMem - AIn")
+        Call Generate_DI_Memory(wrkBook, "IOTags - DIn", "IOMem - DIn")
+        Call Generate_ValvesC_Memory(wrkBook, "IOTags - ValveC", "IOMem - ValveC")
+        Call Generate_ValvesMO_Memory(wrkBook, "IOTags - ValveMO", "IOMem - ValveMO")
+        Call Generate_Motor_Memory(wrkBook, "IOTags - Motor", "IOMem - Motor")
+        Call Generate_VSD_Memory(wrkBook, "IOTags - VSD", "IOMem - VSD")
 
-End Sub
+        Call Remove_From_Descriptions(wrkBook)
+        Call Rem_Spaces(wrkBook, "IOMem - AIn", "F")
+        Call Rem_Spaces(wrkBook, "IOMem - DIn", "F")
+        Call Rem_Spaces(wrkBook, "IOMem - ValveC", "F")
+        Call Rem_Spaces(wrkBook, "IOMem - ValveMO", "F")
+        Call Rem_Spaces(wrkBook, "IOMem - ValveSO", "F")
+        Call Rem_Spaces(wrkBook, "IOMem - Motor", "F")
+        Call Rem_Spaces(wrkBook, "IOMem - VSD", "F")
 
-Private Function Write_Memory(destSheet As String, Optional inNum As String, Optional inName As String, _
-                            Optional inType As String, Optional inVal As String, Optional inDesc As String)
+        Call Copy_Memory_Data(wrkBook)
 
-    Sheets(destSheet).Select
-    RowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-    Range("A" & RowCount + 1).Select
-    
-    Range("A" & RowCount + 1).Cells.Value = inNum
-    Range("B" & RowCount + 1).Cells.Value = inName
-    Range("C" & RowCount + 1).Cells.Value = inType
-    Range("D" & RowCount + 1).Cells.Value = inVal
-    Range("F" & RowCount + 1).Cells.Value = inDesc
+        wrkBook.Sheets("Instructions").Select()
 
-End Function
+        Call Hide_Sheets(wrkBook)
 
-Sub Generate_AI_Memory(sourceSheet As String, destSheet As String)
-'
-'
-'   Generate AI Memory
-    Dim IO_Number As String
-    Dim IO_Name As String
-    Dim IO_Type As String
-    Dim IO_Val As String
-    Dim IO_Addr As String
-    Dim IO_Desc As String
-    
-    Sheets(sourceSheet).Select
-    SourceRowCount = Cells(Cells.Rows.Count, "A").End(xlUp).Row
-    
-    IO_Number = 0
+    End Sub
 
-    For i = 2 To SourceRowCount
-        
-        IO_Name = Worksheets(sourceSheet).Range("A" & i).Cells.Value
-        IO_Type = Worksheets(sourceSheet).Range("B" & i).Cells.Value
-        IO_Val = Worksheets(sourceSheet).Range("C" & i).Cells.Value
-        IO_Desc = Worksheets(sourceSheet).Range("E" & i).Cells.Value
-        
-        IO_Name = Replace(IO_Name, "_Inp_PV", "")
-        IO_Name = Replace(IO_Name, "_Inp_AV", "")
-        
-        If InStr(IO_Name, "Flt") = False Then
-            IO_Number = IO_Number + 1
-            ' Write lines
-            Write_Memory destSheet, IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc
-            Write_Memory destSheet, "", IO_Name & "_Flt", "B R/W", "0", IO_Desc & " IO Fault"
-            Write_Memory destSheet, "", IO_Name & "_OR", "F R/W", "0", IO_Desc & " Override Level"
-            Write_Memory destSheet, "", IO_Name & "_OR_EN", "B R/W", "0", IO_Desc & " Override Enable"
-            Write_Memory destSheet, "", IO_Name & "_PV_DB", "F R/W", "0.025", IO_Desc & " Noise Level"
-            Write_Memory destSheet, "", IO_Name & "_PV_EN", "B R/W", "0", IO_Desc & " Noise Enable Bit"
-            Write_Memory destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, ""
-        End If
-    Next
+    Private Sub Write_Memory(ByRef wrkBook As Workbook, ByVal destSheet As String, Optional ByVal inNum As String = "", Optional ByVal inName As String = "",
+                             Optional ByVal inType As String = "", Optional ByVal inVal As String = "", Optional ByVal inDesc As String = "")
 
-End Sub
-Sub Generate_DI_Memory(sourceSheet As String, destSheet As String)
-'
-'
-'   Generate DI Memory
-    Dim IO_Number As String
-    Dim IO_Name As String
-    Dim IO_Type As String
-    Dim IO_Val As String
-    Dim IO_Addr As String
-    Dim IO_Desc As String
-        
-    Sheets(sourceSheet).Select
-    SourceRowCount = Cells(Cells.Rows.Count, "A").End(xlUp).Row
-    
-    IO_Number = 0
+        Dim RowCount As Integer
+        Dim XLWorkBook As Workbook = wrkBook
+        Dim Wrksheet As Worksheet = XLWorkBook.Sheets(destSheet).Select
 
-    For i = 2 To SourceRowCount
-        IO_Name = Worksheets(sourceSheet).Range("A" & i).Cells.Value
-        IO_Type = Worksheets(sourceSheet).Range("B" & i).Cells.Value
-        IO_Val = Worksheets(sourceSheet).Range("C" & i).Cells.Value
-        IO_Desc = Worksheets(sourceSheet).Range("E" & i).Cells.Value
-        
-        IO_Name = Replace(IO_Name, "_Inp_PV", "")
-    
-        If InStr(IO_Name, "Flt") = False Then
-            IO_Number = IO_Number + 1
-            
-            ' Write Lines
-            Write_Memory destSheet, IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc
-            Write_Memory destSheet, "", IO_Name & "_Flt", "B R/W", "0", IO_Desc & " IO Fault"
-            Write_Memory destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, ""
-            
-        End If
-    Next
+        RowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+        Wrksheet.Range("A" & RowCount + 1).Select()
 
-End Sub
-Sub Generate_ValvesC_Memory(sourceSheet As String, destSheet As String)
-'
-'
-'   Generate ValvesC Memory
-    Dim IO_Number As String
-    Dim IO_Name As String
-    Dim IO_Type As String
-    Dim IO_Val As String
-    Dim IO_Addr As String
-    Dim IO_Desc As String
-        
-    Sheets(sourceSheet).Select
-    SourceRowCount = Cells(Cells.Rows.Count, "A").End(xlUp).Row
-    
-    IO_Number = 0
+        Wrksheet.Range("A" & RowCount + 1).Cells.Value = inNum
+        Wrksheet.Range("B" & RowCount + 1).Cells.Value = inName
+        Wrksheet.Range("C" & RowCount + 1).Cells.Value = inType
+        Wrksheet.Range("D" & RowCount + 1).Cells.Value = inVal
+        Wrksheet.Range("F" & RowCount + 1).Cells.Value = inDesc
 
-    For i = 2 To SourceRowCount
-        IO_Name = Worksheets(sourceSheet).Range("A" & i).Cells.Value
-        IO_Type = Worksheets(sourceSheet).Range("B" & i).Cells.Value
-        IO_Val = Worksheets(sourceSheet).Range("C" & i).Cells.Value
-        IO_Desc = Worksheets(sourceSheet).Range("E" & i).Cells.Value
-        
-        IO_Name = Replace(IO_Name, "_Out_CV", "")
-        
-        If IO_Type = "F R" Then
-            IO_Number = IO_Number + 1
-            
-            ' Write lines
-            Write_Memory destSheet, IO_Number, IO_Name & "_Fbk_Flt", "B R/W", "0", IO_Desc & " Feedback Fault"
-            Write_Memory destSheet, "", IO_Name & "_OR", "F R/W", "0", IO_Desc & " Override Level"
-            Write_Memory destSheet, "", IO_Name & "_OR_EN", "B R/W", "0", IO_Desc & " Override Enable Bit"
-            Write_Memory destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, ""
-            
-        End If
-        
+    End Sub
+
+    Sub Generate_AI_Memory(ByRef wrkBook As Workbook, sourceSheet As String, destSheet As String)
+        '
+        '   Generate AI Memory
+        Dim IO_Number As String
+        Dim IO_Name As String
+        Dim IO_Type As String
+        Dim IO_Val As String
+        Dim IO_Desc As String
+        Dim SourceRowCount As Integer
+        Dim XLWorkBook As Workbook = wrkBook
+        Dim Wrksheet As Worksheet = XLWorkBook.Sheets(sourceSheet).Select
+
+        SourceRowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "A").End.xlUp.Row
+
+        IO_Number = 0
+
+        For i = 2 To SourceRowCount
+
+            IO_Name = Wrksheet.Range("A" & i).Cells.Value
+            IO_Type = Wrksheet.Range("B" & i).Cells.Value
+            IO_Val = Wrksheet.Range("C" & i).Cells.Value
+            IO_Desc = Wrksheet.Range("E" & i).Cells.Value
+
+            IO_Name = Replace(IO_Name, "_Inp_PV", "")
+            IO_Name = Replace(IO_Name, "_Inp_AV", "")
+
+            If InStr(IO_Name, "Flt") = False Then
+                IO_Number = IO_Number + 1
+                ' Write lines
+                Write_Memory(wrkBook, destSheet, IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc)
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_Flt", "B R/W", "0", IO_Desc & " IO Fault")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_OR", "F R/W", "0", IO_Desc & " Override Level")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_OR_EN", "B R/W", "0", IO_Desc & " Override Enable")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_PV_DB", "F R/W", "0.025", IO_Desc & " Noise Level")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_PV_EN", "B R/W", "0", IO_Desc & " Noise Enable Bit")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, "")
+            End If
         Next
 
-End Sub
-Sub Generate_ValvesMO_Memory(sourceSheet As String, destSheet As String)
-'
-'
-'   Generate ValvesSO Memory
-    Dim IO_Number As String
-    Dim IO_Name As String
-    Dim IO_Type As String
-    Dim IO_Val As String
-    Dim IO_Addr As String
-    Dim IO_Desc As String
-        
-    Sheets(sourceSheet).Select
-    SourceRowCount = Cells(Cells.Rows.Count, "A").End(xlUp).Row
-    
-    IO_Number = 0
+    End Sub
+    Sub Generate_DI_Memory(ByRef wrkBook As Workbook, sourceSheet As String, destSheet As String)
+        '
+        '   Generate DI Memory
+        Dim IO_Number As String
+        Dim IO_Name As String
+        Dim IO_Type As String
+        Dim IO_Val As String
+        Dim IO_Desc As String
+        Dim SourceRowCount As Integer
+        Dim XLWorkBook As Workbook = wrkBook
+        Dim Wrksheet As Worksheet = XLWorkBook.Sheets(sourceSheet).Select
 
-    For i = 2 To SourceRowCount
-        IO_Name = Worksheets(sourceSheet).Range("A" & i).Cells.Value
-        IO_Type = Worksheets(sourceSheet).Range("B" & i).Cells.Value
-        IO_Val = Worksheets(sourceSheet).Range("C" & i).Cells.Value
-        IO_Desc = Worksheets(sourceSheet).Range("E" & i).Cells.Value
-    
-        IO_Name = Replace(IO_Name, "_Out", "")
-    
-        If IO_Type = "B R" Then
-            IO_Number = IO_Number + 1
-            
-            ' Write lines
-            Write_Memory destSheet, IO_Number, IO_Name & "_FTC", "B R/W", "0", IO_Desc & " Fail to Close"
-            Write_Memory destSheet, "", IO_Name & "_FTO", "B R/W", "0", IO_Desc & " Fail to Open"
-            Write_Memory destSheet, "", IO_Name & "_Stuck", "B R/W", "0", IO_Desc & " Is Stuck"
-            Write_Memory destSheet, "", IO_Name & "_Inp_ActuatorFault", "B R/W", "0", IO_Desc & " Act Fault"
-            Write_Memory destSheet, "", IO_Name & "_Inp_Hand", "B R/W", "0", IO_Desc & " Input Hand"
-            Write_Memory destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, ""
-            
+        SourceRowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "A").End.xlUp.Row
+
+        IO_Number = 0
+
+        For i = 2 To SourceRowCount
+            IO_Name = Wrksheet.Range("A" & i).Cells.Value
+            IO_Type = Wrksheet.Range("B" & i).Cells.Value
+            IO_Val = Wrksheet.Range("C" & i).Cells.Value
+            IO_Desc = Wrksheet.Range("E" & i).Cells.Value
+
+            IO_Name = Replace(IO_Name, "_Inp_PV", "")
+
+            If InStr(IO_Name, "Flt") = False Then
+                IO_Number = IO_Number + 1
+
+                ' Write Lines
+                Write_Memory(wrkBook, destSheet, IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc)
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_Flt", "B R/W", "0", IO_Desc & " IO Fault")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, "")
+
+            End If
+        Next
+
+    End Sub
+    Sub Generate_ValvesC_Memory(ByRef wrkBook As Workbook, sourceSheet As String, destSheet As String)
+        '
+        '
+        '   Generate ValvesC Memory
+        Dim IO_Number As String
+        Dim IO_Name As String
+        Dim IO_Type As String
+        Dim IO_Val As String
+        Dim IO_Desc As String
+        Dim SourceRowCount As Integer
+        Dim XLWorkBook As Workbook = wrkBook
+        Dim Wrksheet As Worksheet = XLWorkBook.Sheets(sourceSheet).Select
+
+        SourceRowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "A").End.xlUp.Row
+
+        IO_Number = 0
+
+        For i = 2 To SourceRowCount
+            IO_Name = Wrksheet.Range("A" & i).Cells.Value
+            IO_Type = Wrksheet.Range("B" & i).Cells.Value
+            IO_Val = Wrksheet.Range("C" & i).Cells.Value
+            IO_Desc = Wrksheet.Range("E" & i).Cells.Value
+
+            IO_Name = Replace(IO_Name, "_Out_CV", "")
+
+            If IO_Type = "F R" Then
+                IO_Number = IO_Number + 1
+
+                ' Write lines
+                Write_Memory(wrkBook, destSheet, IO_Number, IO_Name & "_Fbk_Flt", "B R/W", "0", IO_Desc & " Feedback Fault")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_OR", "F R/W", "0", IO_Desc & " Override Level")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_OR_EN", "B R/W", "0", IO_Desc & " Override Enable Bit")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, "")
+
+            End If
+
+        Next
+
+    End Sub
+    Sub Generate_ValvesMO_Memory(ByRef wrkBook As Workbook, sourceSheet As String, destSheet As String)
+        '
+        '
+        '   Generate ValvesSO Memory
+        Dim IO_Number As String
+        Dim IO_Name As String
+        Dim IO_Type As String
+        Dim IO_Val As String
+        Dim IO_Desc As String
+        Dim SourceRowCount As Integer
+        Dim XLWorkBook As Workbook = wrkBook
+        Dim Wrksheet As Worksheet = XLWorkBook.Sheets(sourceSheet).Select
+
+        SourceRowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "A").End.xlUp.Row
+
+        IO_Number = 0
+
+        For i = 2 To SourceRowCount
+            IO_Name = Wrksheet.Range("A" & i).Cells.Value
+            IO_Type = Wrksheet.Range("B" & i).Cells.Value
+            IO_Val = Wrksheet.Range("C" & i).Cells.Value
+            IO_Desc = Wrksheet.Range("E" & i).Cells.Value
+
+            IO_Name = Replace(IO_Name, "_Out", "")
+
+            If IO_Type = "B R" Then
+                IO_Number = IO_Number + 1
+
+                ' Write lines
+                Write_Memory(wrkBook, destSheet, IO_Number, IO_Name & "_FTC", "B R/W", "0", IO_Desc & " Fail to Close")
+                Write_Memory(Wrksheet, destSheet, "", IO_Name & "_FTO", "B R/W", "0", IO_Desc & " Fail to Open")
+                Write_Memory(Wrksheet, destSheet, "", IO_Name & "_Stuck", "B R/W", "0", IO_Desc & " Is Stuck")
+                Write_Memory(Wrksheet, destSheet, "", IO_Name & "_Inp_ActuatorFault", "B R/W", "0", IO_Desc & " Act Fault")
+                Write_Memory(Wrksheet, destSheet, "", IO_Name & "_Inp_Hand", "B R/W", "0", IO_Desc & " Input Hand")
+                Write_Memory(Wrksheet, destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, "")
+
+            End If
+
+        Next
+
+    End Sub
+
+    Sub Generate_ValvesSO_Memory(ByRef wrkBook As Workbook, sourceSheet As String, destSheet As String)
+        '
+        '   Generate ValvesSO Memory
+        Dim IO_Number As String
+        Dim IO_Name As String
+        Dim IO_Type As String
+        Dim IO_Val As String
+        Dim IO_Desc As String
+        Dim SourceRowCount As Integer
+        Dim XLWorkBook As Workbook = wrkBook
+        Dim Wrksheet As Worksheet = XLWorkBook.Sheets(sourceSheet).Select
+
+        SourceRowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "A").End.xlUp.Row
+
+        IO_Number = 0
+
+        For i = 2 To SourceRowCount
+            IO_Name = Wrksheet.Range("A" & i).Cells.Value
+            IO_Type = Wrksheet.Range("B" & i).Cells.Value
+            IO_Val = Wrksheet.Range("C" & i).Cells.Value
+            IO_Desc = Wrksheet.Range("E" & i).Cells.Value
+
+            IO_Name = Replace(IO_Name, "_Out", "")
+
+            If IO_Type = "B R" Then
+                IO_Number = IO_Number + 1
+
+                ' Write lines
+                Write_Memory(wrkBook, destSheet, IO_Number, IO_Name & "_FTC", "B R/W", "0", IO_Desc & " Fail to Close")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_FTO", "B R/W", "0", IO_Desc & " Fail to Open")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_Inp_Hand", "B R/W", "0", IO_Desc & " Input Hand")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_Stuck", "B R/W", "0", IO_Desc & " Is Stuck")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, "")
+
+            End If
+
+        Next
+
+    End Sub
+
+    Sub Generate_Motor_Memory(ByRef wrkBook As Workbook, sourceSheet As String, destSheet As String)
+        '
+        '   Generate Motor Memory
+        Dim IO_Number As String
+        Dim IO_Name As String
+        Dim IO_Type As String
+        Dim IO_Val As String
+        Dim IO_Desc As String
+        Dim SourceRowCount As Integer
+        Dim XLWorkBook As Workbook = wrkBook
+        Dim Wrksheet As Worksheet = XLWorkBook.Sheets(sourceSheet).Select
+
+        SourceRowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "A").End.xlUp.Row
+
+        IO_Number = 0
+
+        For i = 2 To SourceRowCount
+            IO_Name = Wrksheet.Range("A" & i).Cells.Value
+            IO_Type = Wrksheet.Range("B" & i).Cells.Value
+            IO_Val = Wrksheet.Range("C" & i).Cells.Value
+            IO_Desc = Wrksheet.Range("E" & i).Cells.Value
+
+            IO_Name = Replace(IO_Name, "_Out_Run", "")
+
+            If IO_Type = "B R" Then
+                IO_Number = IO_Number + 1
+
+                ' Write lines
+                Write_Memory(wrkBook, destSheet, IO_Number, IO_Name & "_Inp_Faulted", "B R/W", "0", IO_Desc & " Faulted")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_FTR", "B R/W", "0", IO_Desc & " Fail to Run")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_FTS", "B R/W", "0", IO_Desc & " Fail to Stop")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_Inp_Hand", "B R/W", "0", IO_Desc & " Input Hand")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_OverLoad", "B R/W", "0", IO_Desc & " OverLoad")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, "")
+
+            End If
+        Next
+
+    End Sub
+    Sub Generate_VSD_Memory(ByRef wrkBook As Workbook, sourceSheet As String, destSheet As String)
+        '
+        '   Generate Motor Memory
+        Dim IO_Number As String
+        Dim IO_Name As String
+        Dim IO_Type As String
+        Dim IO_Val As String
+        Dim IO_Desc As String
+        Dim SourceRowCount As Integer
+        Dim XLWorkBook As Workbook = wrkBook
+        Dim Wrksheet As Worksheet = XLWorkBook.Sheets(sourceSheet).Select
+
+        SourceRowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "A").End.xlUp.Row
+
+        IO_Number = 0
+
+        For i = 2 To SourceRowCount
+            IO_Name = Wrksheet.Range("A" & i).Cells.Value
+            IO_Type = Wrksheet.Range("B" & i).Cells.Value
+            IO_Val = Wrksheet.Range("C" & i).Cells.Value
+            IO_Desc = Wrksheet.Range("E" & i).Cells.Value
+
+            IO_Name = Replace(IO_Name, "_Out_Run", "")
+
+            If IO_Type = "B R" Then
+                IO_Number = IO_Number + 1
+
+                ' Write lines
+                Write_Memory(wrkBook, destSheet, IO_Number, IO_Name & "_Inp_Faulted", "B R/W", "0", IO_Desc & " Faulted")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_FTR", "B R/W", "0", IO_Desc & " Fail to Run")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_FTS", "B R/W", "0", IO_Desc & " Fail to Stop")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_Inp_Hand", "B R/W", "0", IO_Desc & " Input Hand")
+                Write_Memory(wrkBook, destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, "")
+
+            End If
+        Next
+
+    End Sub
+
+    Sub Copy_Memory_Data(ByRef wrkBook As Workbook)
+        '
+        'Clear MemoryData sheet
+
+        Dim XLWorkBook As Workbook = wrkBook
+        Dim Wrksheet As Worksheet = XLWorkBook.Sheets("MemoryData").Select
+        Wrksheet.Range("A2:F9999").Clear()
+
+        'Copy AIn Memory Data
+        Wrksheet = XLWorkBook.Sheets("IOMem - AIn").Select
+        Dim RowCount As Integer = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+
+        If RowCount > 1 Then
+            Wrksheet.Range("B2:F" & RowCount).Copy()
+
+            'Paste data into MemoryData sheet
+            Wrksheet = XLWorkBook.Sheets("MemoryData").Select
+            Wrksheet.Range("A2").PasteSpecial(Paste:=xlPasteValues)
         End If
-        
-    Next
 
-End Sub
+        'Copy DIn Memory Data
+        Wrksheet = XLWorkBook.Sheets("IOMem - DIn").Select
+        RowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
 
-Sub Generate_ValvesSO_Memory(sourceSheet As String, destSheet As String)
-'
-'
-'   Generate ValvesSO Memory
-    Dim IO_Number As String
-    Dim IO_Name As String
-    Dim IO_Type As String
-    Dim IO_Val As String
-    Dim IO_Addr As String
-    Dim IO_Desc As String
-        
-    Sheets(sourceSheet).Select
-    SourceRowCount = Cells(Cells.Rows.Count, "A").End(xlUp).Row
-    
-    IO_Number = 0
+        If RowCount > 1 Then
+            Wrksheet.Range("B2:F" & RowCount).Copy()
 
-    For i = 2 To SourceRowCount
-        IO_Name = Worksheets(sourceSheet).Range("A" & i).Cells.Value
-        IO_Type = Worksheets(sourceSheet).Range("B" & i).Cells.Value
-        IO_Val = Worksheets(sourceSheet).Range("C" & i).Cells.Value
-        IO_Desc = Worksheets(sourceSheet).Range("E" & i).Cells.Value
-    
-        IO_Name = Replace(IO_Name, "_Out", "")
-    
-        If IO_Type = "B R" Then
-            IO_Number = IO_Number + 1
-            
-            ' Write lines
-            Write_Memory destSheet, IO_Number, IO_Name & "_FTC", "B R/W", "0", IO_Desc & " Fail to Close"
-            Write_Memory destSheet, "", IO_Name & "_FTO", "B R/W", "0", IO_Desc & " Fail to Open"
-            Write_Memory destSheet, "", IO_Name & "_Inp_Hand", "B R/W", "0", IO_Desc & " Input Hand"
-            Write_Memory destSheet, "", IO_Name & "_Stuck", "B R/W", "0", IO_Desc & " Is Stuck"
-            Write_Memory destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, ""
-            
+            'Paste data into MemoryData sheet
+            Wrksheet = XLWorkBook.Sheets("MemoryData").Select
+            Dim MemRowCount As Integer = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+            Dim MemRow As Integer = MemRowCount + 1
+            Wrksheet.Range("A" & MemRow).PasteSpecial(Paste:=xlPasteValues)
         End If
-        
-    Next
 
-End Sub
+        'Copy ValveC Memory Data
+        Wrksheet = XLWorkBook.Sheets("IOMem - ValveC").Select
+        RowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+        If RowCount > 1 Then
+            Wrksheet.Range("B2:F" & RowCount).Copy()
 
-Sub Generate_Motor_Memory(sourceSheet As String, destSheet As String)
-'
-'
-'   Generate Motor Memory
-    Dim IO_Number As String
-    Dim IO_Name As String
-    Dim IO_Type As String
-    Dim IO_Val As String
-    Dim IO_Addr As String
-    Dim IO_Desc As String
-        
-    Sheets(sourceSheet).Select
-    SourceRowCount = Cells(Cells.Rows.Count, "A").End(xlUp).Row
-    
-    IO_Number = 0
-
-    For i = 2 To SourceRowCount
-        IO_Name = Worksheets(sourceSheet).Range("A" & i).Cells.Value
-        IO_Type = Worksheets(sourceSheet).Range("B" & i).Cells.Value
-        IO_Val = Worksheets(sourceSheet).Range("C" & i).Cells.Value
-        IO_Desc = Worksheets(sourceSheet).Range("E" & i).Cells.Value
-    
-        IO_Name = Replace(IO_Name, "_Out_Run", "")
-    
-        If IO_Type = "B R" Then
-            IO_Number = IO_Number + 1
-        
-            ' Write lines
-            Write_Memory destSheet, IO_Number, IO_Name & "_Inp_Faulted", "B R/W", "0", IO_Desc & " Faulted"
-            Write_Memory destSheet, "", IO_Name & "_FTR", "B R/W", "0", IO_Desc & " Fail to Run"
-            Write_Memory destSheet, "", IO_Name & "_FTS", "B R/W", "0", IO_Desc & " Fail to Stop"
-            Write_Memory destSheet, "", IO_Name & "_Inp_Hand", "B R/W", "0", IO_Desc & " Input Hand"
-            Write_Memory destSheet, "", IO_Name & "_OverLoad", "B R/W", "0", IO_Desc & " OverLoad"
-            Write_Memory destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, ""
-            
+            'Paste data into MemoryData sheet
+            Wrksheet = XLWorkBook.Sheets("MemoryData").Select
+            Dim MemRowCount As Integer = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+            Dim MemRow As Integer = MemRowCount + 1
+            Wrksheet.Range("A" & MemRow).PasteSpecial(Paste:=xlPasteValues)
         End If
-    Next
 
-End Sub
-Sub Generate_VSD_Memory(sourceSheet As String, destSheet As String)
-'
-'
-'   Generate Motor Memory
-    Dim IO_Number As String
-    Dim IO_Name As String
-    Dim IO_Type As String
-    Dim IO_Val As String
-    Dim IO_Addr As String
-    Dim IO_Desc As String
-        
-    Sheets(sourceSheet).Select
-    SourceRowCount = Cells(Cells.Rows.Count, "A").End(xlUp).Row
-    
-    IO_Number = 0
+        'Copy ValveMO Memory Data
+        Wrksheet = XLWorkBook.Sheets("IOMem - ValveMO").Select
+        RowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+        If RowCount > 1 Then
+            Wrksheet.Range("B2:F" & RowCount).Copy()
 
-    For i = 2 To SourceRowCount
-        IO_Name = Worksheets(sourceSheet).Range("A" & i).Cells.Value
-        IO_Type = Worksheets(sourceSheet).Range("B" & i).Cells.Value
-        IO_Val = Worksheets(sourceSheet).Range("C" & i).Cells.Value
-        IO_Desc = Worksheets(sourceSheet).Range("E" & i).Cells.Value
-        
-        IO_Name = Replace(IO_Name, "_Out_Run", "")
-        
-        If IO_Type = "B R" Then
-            IO_Number = IO_Number + 1
-            
-            ' Write lines
-            Write_Memory destSheet, IO_Number, IO_Name & "_Inp_Faulted", "B R/W", "0", IO_Desc & " Faulted"
-            Write_Memory destSheet, "", IO_Name & "_FTR", "B R/W", "0", IO_Desc & " Fail to Run"
-            Write_Memory destSheet, "", IO_Name & "_FTS", "B R/W", "0", IO_Desc & " Fail to Stop"
-            Write_Memory destSheet, "", IO_Name & "_Inp_Hand", "B R/W", "0", IO_Desc & " Input Hand"
-            Write_Memory destSheet, "", IO_Name & "_String", "STR R/W", IO_Name, ""
-            
+            'Paste data into MemoryData sheet
+            Wrksheet = XLWorkBook.Sheets("MemoryData").Select
+            Dim MemRowCount As Integer = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+            Dim MemRow As Integer = MemRowCount + 1
+            Wrksheet.Range("A" & MemRow).PasteSpecial(Paste:=xlPasteValues)
         End If
-    Next
 
-End Sub
+        'Copy ValveSO Memory Data
+        Wrksheet = XLWorkBook.Sheets("IOMem - ValveSO").Select
+        RowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+        If RowCount > 1 Then
+            Wrksheet.Range("B2:F" & RowCount).Copy()
 
-Sub Copy_Memory_Data(ByRef x As Integer)
-    '
-    '
-    '
-    'Clear MemoryData sheet
-    Sheets("MemoryData").Select
-    Range("A2:F9999").Clear
+            'Paste data into MemoryData sheet
+            Wrksheet = XLWorkBook.Sheets("MemoryData").Select
+            Dim MemRowCount As Integer = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+            Dim MemRow As Integer = MemRowCount + 1
+            Wrksheet.Range("A" & MemRow).PasteSpecial(Paste:=xlPasteValues)
+        End If
 
-    'Copy AIn Memory Data
-    Sheets("IOMem - AIn").Select
-    RowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-    If RowCount > 1 Then
-        Range("B2:F" & RowCount).Copy
+        'Copy Motor Memory Data
+        Wrksheet = XLWorkBook.Sheets("IOMem - Motor").Select
+        RowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+        If RowCount > 1 Then
+            Wrksheet.Range("B2:F" & RowCount).Copy()
 
-        'Paste data into MemoryData sheet
-        Sheets("MemoryData").Select
-        Range("A2").PasteSpecial(xlPasteValues)
-    End If
+            'Paste data into MemoryData sheet
+            Wrksheet = XLWorkBook.Sheets("MemoryData").Select
+            Dim MemRowCount As Integer = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+            Dim MemRow As Integer = MemRowCount + 1
+            Wrksheet.Range("A" & MemRow).PasteSpecial(Paste:=xlPasteValues)
+        End If
 
-    'Copy DIn Memory Data
-    Sheets("IOMem - DIn").Select
-    RowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-    If RowCount > 1 Then
-        Range("B2:F" & RowCount).Copy
+        'Copy VSD Memory Data
+        Wrksheet = XLWorkBook.Sheets("IOMem - VSD").Select
+        RowCount = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+        If RowCount > 1 Then
+            Wrksheet.Range("B2:F" & RowCount).Copy()
+            Wrksheet.Range("A1").Select()
 
-        'Paste data into MemoryData sheet
-        Sheets("MemoryData").Select
-        MemRowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-        MemRow = MemRowCount + 1
-        Range("A" & MemRow).PasteSpecial(xlPasteValues)
-    End If
+            Wrksheet = XLWorkBook.Sheets("MemoryData").Select
+            Dim MemRowCount As Integer = Wrksheet.Cells(Wrksheet.Rows.Count, "B").End.xlUp.Row
+            Dim MemRow As Integer = MemRowCount + 1
+            Wrksheet.Range("A" & MemRow).PasteSpecialPaste(Paste:=xlPasteValues)
+        End If
 
-    'Copy ValveC Memory Data
-    Sheets("IOMem - ValveC").Select
-    RowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-    If RowCount > 1 Then
-        Range("B2:F" & RowCount).Copy
+        Wrksheet.Range("A1").Select()
+        XLWorkBook.Application.CutCopyMode = False
 
-        'Paste data into MemoryData sheet
-        Sheets("MemoryData").Select
-        MemRowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-        MemRow = MemRowCount + 1
-        Range("A" & MemRow).PasteSpecial(xlPasteValues)
-    End If
+    End Sub
 
-    'Copy ValveMO Memory Data
-    Sheets("IOMem - ValveMO").Select
-    RowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-    If RowCount > 1 Then
-        Range("B2:F" & RowCount).Copy
+    Sub Remove_From_Descriptions(ByRef XLWorkBook As Workbook)
+        '
+        Dim WrkBook As Workbook = XLWorkBook
+        Dim WrkSheet As Worksheet
+        Dim Keyword As String
 
-        'Paste data into MemoryData sheet
-        Sheets("MemoryData").Select
-        MemRowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-        MemRow = MemRowCount + 1
-        Range("A" & MemRow).PasteSpecial(xlPasteValues)
-    End If
-
-    'Copy ValveSO Memory Data
-    Sheets("IOMem - ValveSO").Select
-    RowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-    If RowCount > 1 Then
-        Range("B2:F" & RowCount).Copy
-
-        'Paste data into MemoryData sheet
-        Sheets("MemoryData").Select
-        MemRowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-        MemRow = MemRowCount + 1
-        Range("A" & MemRow).PasteSpecial(xlPasteValues)
-    End If
-
-    'Copy Motor Memory Data
-    Sheets("IOMem - Motor").Select
-    RowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-    If RowCount > 1 Then
-        Range("B2:F" & RowCount).Copy
-
-        'Paste data into MemoryData sheet
-        Sheets("MemoryData").Select
-        MemRowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-        MemRow = MemRowCount + 1
-        Range("A" & MemRow).PasteSpecial(xlPasteValues)
-    End If
-
-    'Copy VSD Memory Data
-    Sheets("IOMem - VSD").Select
-    RowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-    If RowCount > 1 Then
-        Range("B2:F" & RowCount).Copy
-        Range("A1").Select
-
-        Sheets("MemoryData").Select
-        MemRowCount = Cells(Cells.Rows.Count, "B").End(xlUp).Row
-        MemRow = MemRowCount + 1
-        Range("A" & MemRow).PasteSpecial(xlPasteValues)
-    End If
-
-    Range("A1").Select
-    Application.CutCopyMode = False
-
-End Sub
-Sub Remove_From_Descriptions(ByRef x As Integer)
-    '
-    '
-    '
-    Dim Keyword As String
-
-    ' Remove keywords from ValveC Memory
-    Sheets("IOMem - ValveC").Select
-    For i = 10 To 17    'Data is in rows 10 to 17
-        Keyword = Worksheets("Instructions").Range("C" & i).Cells.Value
-        If Keyword <> "" Then
-            Columns("F").Replace What:=" " & Keyword,
+        ' Remove keywords from ValveC Memory
+        WrkSheet = WrkBook.Sheets("IOMem - ValveC").Select
+        For i = 10 To 17    'Data is in rows 10 to 17
+            Keyword = WrkBook.Sheets("Instructions").Range("C" & i).Cells.Value
+            If Keyword <> "" Then
+                WrkSheet.Columns("F").Replace(What:=" " & Keyword,
                         Replacement:="",
-                        LookAt:=xlPart,
-                        SearchOrder:=xlByRows,
+                        LookAt:="XlPart",
+                        SearchOrder:="XlByRows",
                         MatchCase:=False,
                         SearchFormat:=False,
-                        ReplaceFormat:=False
-        End If
-    Next
+                        ReplaceFormat:=False)
+            End If
+        Next
 
-    ' Remove keywords from ValveSO_MO Memory
-    Sheets("IOMem - ValveMO").Select
-    For i = 10 To 17    'Data is in rows 10 to 17
-        Keyword = Worksheets("Instructions").Range("D" & i).Cells.Value
-        If Keyword <> "" Then
-            Columns("F").Replace What:=" " & Keyword,
+        ' Remove keywords from ValveSO_MO Memory
+        WrkSheet = WrkBook.Sheets("IOMem - ValveMO").Select
+        For i = 10 To 17    'Data is in rows 10 to 17
+            Keyword = WrkBook.Sheets("Instructions").Range("D" & i).Cells.Value
+            If Keyword <> "" Then
+                WrkSheet.Columns("F").Replace(What:=" " & Keyword,
                         Replacement:="",
-                        LookAt:=xlPart,
-                        SearchOrder:=xlByRows,
+                        LookAt:="xlPart",
+                        SearchOrder:="xlByRows",
                         MatchCase:=False,
                         SearchFormat:=False,
-                        ReplaceFormat:=False
-        End If
-    Next
+                        ReplaceFormat:=False)
+            End If
+        Next
 
-    ' Remove keywords from ValveSO_MO Memory
-    Sheets("IOMem - ValveSO").Select
-    For i = 10 To 17    'Data is in rows 10 to 17
-        Keyword = Worksheets("Instructions").Range("D" & i).Cells.Value
-        If Keyword <> "" Then
-            Columns("F").Replace What:=" " & Keyword,
+        ' Remove keywords from ValveSO_MO Memory
+        WrkSheet = WrkBook.Sheets("IOMem - ValveSO").Select
+        For i = 10 To 17    'Data is in rows 10 to 17
+            Keyword = WrkBook.Sheets("Instructions").Range("D" & i).Cells.Value
+            If Keyword <> "" Then
+                WrkSheet.Columns("F").Replace(What:=" " & Keyword,
                         Replacement:="",
-                        LookAt:=xlPart,
-                        SearchOrder:=xlByRows,
+                        LookAt:="xlPart",
+                        SearchOrder:="xlByRows",
                         MatchCase:=False,
                         SearchFormat:=False,
-                        ReplaceFormat:=False
-        End If
-    Next
+                        ReplaceFormat:=False)
+            End If
+        Next
 
-    ' Remove keywords from Motor Memory
-    Sheets("IOMem - Motor").Select
-    For i = 10 To 17    'Data is in rows 10 to 17
-        Keyword = Worksheets("Instructions").Range("E" & i).Cells.Value
-        If Keyword <> "" Then
-            Columns("F").Replace What:=" " & Keyword,
+        ' Remove keywords from Motor Memory
+        WrkSheet = WrkBook.Sheets("IOMem - Motor").Select
+        For i = 10 To 17    'Data is in rows 10 to 17
+            Keyword = WrkBook.Sheets("Instructions").Range("E" & i).Cells.Value
+            If Keyword <> "" Then
+                WrkSheet.Columns("F").Replace(What:=" " & Keyword,
                         Replacement:="",
-                        LookAt:=xlPart,
-                        SearchOrder:=xlByRows,
+                        LookAt:="xlPart",
+                        SearchOrder:="xlByRows",
                         MatchCase:=False,
                         SearchFormat:=False,
-                        ReplaceFormat:=False
-        End If
-    Next
+                        ReplaceFormat:=False)
+            End If
+        Next
 
-    ' Remove keywords from VSD Memory
-    Sheets("IOMem - VSD").Select
-    For i = 10 To 17    'Data is in rows 10 to 17
-        Keyword = Worksheets("Instructions").Range("F" & i).Cells.Value
-        If Keyword <> "" Then
-            Columns("F").Replace What:=" " & Keyword,
+        ' Remove keywords from VSD Memory
+        WrkSheet = WrkBook.Sheets("IOMem - VSD").Select
+        For i = 10 To 17    'Data is in rows 10 to 17
+            Keyword = WrkBook.Sheets("Instructions").Range("F" & i).Cells.Value
+            If Keyword <> "" Then
+                WrkSheet.Columns("F").Replace(What:=" " & Keyword,
                         Replacement:="",
-                        LookAt:=xlPart,
-                        SearchOrder:=xlByRows,
+                        LookAt:="xlPart",
+                        SearchOrder:="xlByRows",
                         MatchCase:=False,
                         SearchFormat:=False,
-                        ReplaceFormat:=False
-        End If
-    Next
+                        ReplaceFormat:=False)
+            End If
+        Next
 
 
-End Sub
+    End Sub
+
+End Module
