@@ -3,7 +3,7 @@ Public Class Form1
 
     Private Sub BtnDataAndRun_Click(sender As Object, e As EventArgs) Handles BtnDataAndRun.Click
 
-        Call Button_Data_And_Run()
+        Call Main()
 
     End Sub
 

@@ -3,29 +3,59 @@ Imports Excel = Microsoft.Office.Interop.Excel
 
 Module ImportData
 
-    Sub Button_Data_And_Run()
+    Sub Main()
 
         'Select and open the Excel project file (PLC IO Mapping) that will be used to create PICS simulation files
-        Dim XLProjectWB = OpenXLProjectFN()
+        Dim XLProjectWB As Workbook
+        XLProjectWB = OpenXLProjectFN()
+        If XLProjectWB Is Nothing Then 'No project file selected
+            Exit Sub
+        End If
 
-        'Create or update the Excel PICS Config file that will organize all data
+        'Create or update the Excel PICS Config file that will organize data
+        Dim pathname As New IO.FileInfo(XLProjectWB.Name)
+        Dim CurDir As String = pathname.Directory.Name
+        Dim XLpicsWB As Workbook
+        Dim response As MsgBoxResult
+        Dim XLpicsFN As String
+
+        response = MsgBox("Create A New PICS Config Builder file?", vbYesNo)
+
+        If response = vbYes Then
+            XLpicsFN = InputBox("Enter New PICS Config Builder File Name:", "New File Name", "PICS_Config_Builder",,)
+            XLpicsWB = OpenXLpicsFN(CurDir + XLpicsFN)
+
+        Else
+            XLpicsFN = ""
+            XLpicsWB = OpenXLpicsFN(XLpicsFN)
+
+        End If
+
         Call Button_Import_Data(XLProjectWB)
 
-        'XLWrkBook.Application.ScreenUpdating = False
+        XLpicsWB.Application.ScreenUpdating = False
 
-        'Call Generate_Sim_Data(XLWrkBook)
-        'Call Generate_Memory_Data(XLWrkBook)
-        'Call Generate_Wire_Data(XLWrkBook)
+        Call Generate_Sim_Data(XLpicsWB)
+        Call Generate_Memory_Data(XLpicsWB)
+        Call Generate_Wire_Data(XLpicsWB)
 
-        'Dim outFolder As String
-        'outFolder = Create_Output_Folder(XLWrkBook)
+        Dim outFolder As String
+        outFolder = Create_Output_Folder(XLpicsWB)
 
-        'Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
-        'Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
-        'Call Export_Wire_Data(XLWrkBook, outFolder)
+        Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
+        Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
+        Call Export_Wire_Data(XLpicsWB, outFolder)
 
-        'XLWrkBook.Application.ScreenUpdating = False
-        'XLApp.Quit()
+        XLpicsWB.Application.ScreenUpdating = False
+        XLpicsWB.Close()
+
+        If XLProjectWB.Name.Contains(".xlsm") Then  'Re-enable Excel application macros security settings prior to closing file
+            XLProjectWB.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
+            XLProjectWB.Close()
+        Else
+            XLProjectWB.Close()
+
+        End If
 
     End Sub
 
@@ -85,6 +115,7 @@ Module ImportData
         'WARNING!!! This will clear all data AND delete all Wire sheets
         If MsgBox("WARNING! This will clear all data from this workbook and delete existing Wire data sheets.", vbOKCancel) = vbCancel Then Exit Sub
 
+        Dim ws As Worksheet
         wrkBook.Application.ScreenUpdating = False
 
         Call Button_Unhide_All_Sheets(wrkBook)
@@ -100,7 +131,8 @@ Module ImportData
         Call Delete_Wire_Sheets(wrkBook, "Wire_VSD Template")
 
         Call Button_Hide_Sheets(wrkBook)
-        wrkBook.Sheets("Instructions").Range("CPU_PREFIX").ClearContents
+        ws = CType(wrkBook.Sheets("Instructions"), Worksheet)
+        ws.Range("CPU_PREFIX").ClearContents()
 
         wrkBook.Application.ScreenUpdating = True
 
@@ -133,25 +165,61 @@ Module ImportData
 
     End Function
 
-    Function OpenXLProjectFN()
+    Function OpenXLProjectFN() As Workbook
 
         'Select and open the Excel project file (PLC IO Mapping) that will be used to create PICS simulation files
         Dim XLApp As Excel.Application
         Dim XLWrkBook As Excel.Workbook
         Dim XLWrkSheet As Excel.Worksheet
-        Dim FileName As String
+        Dim sFileN As String
         Dim title = "Open - Select Project Config File"
         Dim fnXtnFilter = "Excel Files (*.xls;*.xlsm),*.xls;*xlsm"
 
         XLApp = CType(CreateObject("Excel.Application"), Excel.Application)
-        FileName = XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title)
-        XLWrkBook = XLApp.Workbooks.Open(FileName)
-        XLWrkSheet = XLWrkBook.ActiveSheet
+        sFileN = CType(XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title), String)
 
-        XLWrkSheet.Visible = True
-        '        XLWrkBook.UserControl = True
-        Return XLWrkBook
+        If sFileN = False Then 'operator cancelled operation to open the project file
+            XLApp.Quit()
+            Return Nothing
+        End If
+
+        If sFileN.Contains(".xlsm") Then  'Disable Excel application macros prior to opening file
+            XLApp.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
+        End If
+
+        XLWrkBook = XLApp.Workbooks.Open(Filename:=sFileN, ReadOnly:=True)
+        XLWrkSheet = CType(XLWrkBook.ActiveSheet, Worksheet)
+
+        XLWrkSheet.Visible = CType(True, Excel.XlSheetVisibility)
+
+        Return CType(XLWrkBook, Workbook)
 
     End Function
 
+    Function OpenXLpicsFN(ByVal FileName As String) As Workbook
+
+        'Select or create PICS Excel file that will be used to create PICS simulation files
+        Dim XLApp As Excel.Application
+        Dim XLWrkBook As Excel.Workbook
+        Dim XLWrkSheet As Excel.Worksheet
+        Dim title = "Open - Select PICS Config File"
+        Dim fnXtnFilter = "Excel Files (*.xls;*.xlsm),*.xls;*xlsm"
+
+        XLApp = CType(CreateObject("Excel.Application"), Excel.Application)
+
+        If FileName <> "" Then 'open existing or create a new PICS Config Excel File
+            XLWrkBook = XLApp.Workbooks.Open(FileName)
+            XLWrkSheet = CType(XLWrkBook.ActiveSheet, Excel.Worksheet)
+        Else
+            FileName = CType(XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title), String)
+            XLWrkBook = XLApp.Workbooks.Open(FileName)
+            XLWrkSheet = CType(XLWrkBook.ActiveSheet, Excel.Worksheet)
+
+        End If
+
+        XLWrkSheet.Visible = CType(True, Excel.XlSheetVisibility)
+
+        Return CType(XLWrkBook, Workbook)
+
+    End Function
 End Module

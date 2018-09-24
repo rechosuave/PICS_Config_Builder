@@ -6,7 +6,8 @@ Module SimData
         Call Unhide_All_Sheets(wrkBook)
 
         'Unfilter IO Sheet if someone decided to filter it
-        Dim wrkSheet As Worksheet = wrkBook.Sheets("IO Sheets").Select
+        Dim wrkSheet As Worksheet = CType(wrkBook.Sheets("IO Sheets"), Worksheet)
+
         If wrkSheet.FilterMode Then wrkSheet.ShowAllData()
 
         Clear_Sheet_Type(wrkBook, "SimData")
@@ -28,16 +29,16 @@ Module SimData
 
         Call SortByColumn(wrkBook, "IOTags - ValveC", "E")
 
-        wrkSheet = wrkBook.Sheets("IOTags - AIn")
+        wrkSheet = CType(wrkBook.Sheets("IOTags - AIn"), Worksheet)
         wrkSheet.Range("A2").Select()
 
-        wrkSheet = wrkBook.Sheets("IOTags - DIn")
+        wrkSheet = CType(wrkBook.Sheets("IOTags - DIn"), Worksheet)
         wrkSheet.Range("A2").Select()
 
-        wrkSheet = wrkBook.Sheets("SimData")
+        wrkSheet = CType(wrkBook.Sheets("SimData"), Worksheet)
         wrkSheet.Range("A8").Select()
 
-        wrkSheet = wrkBook.Sheets("Instructions")
+        wrkSheet = CType(wrkBook.Sheets("Instructions"), Worksheet)
 
         Call Hide_Sheets(wrkBook)
 
@@ -81,13 +82,8 @@ Module SimData
     Sub Make_Sim_Tags(ByRef wrkBook As Workbook, sourceSheet As String, DataSheet As String)
         '
         Dim SimName, SimType, SimDefVal, SimIOAddr, SimDesc As String
-
         Dim Prefix, PLCBaseTag, DataType, IOVariable, IOAddress, IOType, DesignTag, Description As String
-        'Dim Rack, Module, Channel As String
-
-        Dim IOPrefix
-        'Dim AInSheet, ValveCSheet, DInSheet, ValveMOSheet, ValveSOSheet, MotorSheet, VSDSheet As String
-        Dim MinMaxPrefix As String
+        Dim IOPrefix, MinMaxPrefix As String
         Dim InputMin, InputMax, OutputMin, OutputMax As Integer
 
         Prefix = Get_CPU_Name(wrkBook)
@@ -95,7 +91,7 @@ Module SimData
         MinMaxPrefix = "MinMax - "
 
         'Source data is in sourceSheet, DataSheet is the destination
-        Dim wrkSheet As Worksheet = wrkBook.Sheets(sourceSheet).Select
+        Dim wrkSheet As Worksheet = CType(wrkBook.Sheets(sourceSheet), Worksheet)
         Dim SourceRowCount As Integer = wrkSheet.Range("A").End(Microsoft.Office.Interop.Excel.XlDirection.xlUp).Row
 
         Dim PLCBaseTag_Col As Integer = Find_Header_Column(wrkBook, sourceSheet, "PLCBaseTag")
@@ -112,17 +108,17 @@ Module SimData
 
         For i = 2 To SourceRowCount
 
-            PLCBaseTag = wrkSheet.Range(i, PLCBaseTag_Col).Value
-            DataType = wrkSheet.Range(i, DataType_Col).Value
-            IOVariable = wrkSheet.Range(i, IOVariable_Col).Value
-            IOAddress = wrkSheet.Range(i, IOAddress_Col).Value
-            IOType = wrkSheet.Range(i, IOType_Col).Value
-            DesignTag = wrkSheet.Range(i, DesignTag_Col).Value
-            Description = wrkSheet.Range(i, Description_Col).Value
-            InputMin = wrkSheet.Range(i, InputMin_Col).Value
-            InputMax = wrkSheet.Range(i, InputMax_Col).Value
-            OutputMin = wrkSheet.Range(i, OutputMin_Col).Value
-            OutputMax = wrkSheet.Range(i, OutputMax_Col).Value
+            PLCBaseTag = CType(wrkSheet.Range(i, PLCBaseTag_Col).Value, String)
+            DataType = CType(wrkSheet.Range(i, DataType_Col).Value, String)
+            IOVariable = CType(wrkSheet.Range(i, IOVariable_Col).Value, String)
+            IOAddress = CType(wrkSheet.Range(i, IOAddress_Col).Value, String)
+            IOType = CType(wrkSheet.Range(i, IOType_Col).Value, String)
+            DesignTag = CType(wrkSheet.Range(i, DesignTag_Col).Value, String)
+            Description = CType(wrkSheet.Range(i, Description_Col).Value, String)
+            InputMin = CType(wrkSheet.Range(i, InputMin_Col).Value, Integer)
+            InputMax = CType(wrkSheet.Range(i, InputMax_Col).Value, Integer)
+            OutputMin = CType(wrkSheet.Range(i, OutputMin_Col).Value, Integer)
+            OutputMax = CType(wrkSheet.Range(i, OutputMax_Col).Value, Integer)
 
             ' Since these are all the same in PICS functionally, make them all AIn
             DataType = Replace(DataType, "AInAdv", "AIn")
@@ -155,7 +151,7 @@ Module SimData
                     SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
                     SimDesc = Description
 
-                    wrkSheet = wrkBook.Sheets(DataSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(DataSheet), Worksheet)
 
                     Dim RowCount As Integer = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
@@ -166,7 +162,7 @@ Module SimData
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ' Write data to IO tag sheet
-                    wrkSheet = wrkBook.Sheets(stripSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -180,7 +176,7 @@ Module SimData
                     SimIOAddr = Replace(SimIOAddr, "Data", "Fault")
                     SimDesc = Description & " CH_FLT"
 
-                    wrkSheet = wrkBook.Sheets(DataSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(DataSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -190,7 +186,7 @@ Module SimData
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ' Write channel fault item to IO tag sheet
-                    wrkSheet = wrkBook.Sheets(stripSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").EndxlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -207,7 +203,7 @@ Module SimData
                     SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
                     SimDesc = Description
 
-                    wrkSheet = wrkBook.Sheets(DataSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(DataSheet), Worksheet)
                     Dim RowCount As Integer = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -216,7 +212,7 @@ Module SimData
                     wrkSheet.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    wrkSheet = wrkBook.Sheets(stripSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -233,7 +229,7 @@ Module SimData
                     SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
                     SimDesc = Description
 
-                    wrkSheet = wrkBook.Sheets(DataSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(DataSheet), Worksheet)
                     Dim RowCount As Integer = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -243,7 +239,7 @@ Module SimData
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ' Write data to IO tag sheets
-                    wrkSheet = wrkBook.Sheets(stripSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -252,7 +248,7 @@ Module SimData
                     wrkSheet.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    wrkSheet = wrkBook.Sheets(stripMinMax).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripMinMax), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -274,7 +270,7 @@ Module SimData
 
                     SimDesc = Description & " CH_FLT"
 
-                    wrkSheet = wrkBook.Sheets(DataSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(DataSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -284,7 +280,7 @@ Module SimData
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ' Add faults to IO tag sheet
-                    wrkSheet = wrkBook.Sheets(stripSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -293,7 +289,7 @@ Module SimData
                     wrkSheet.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    wrkSheet = wrkBook.Sheets(stripMinMax).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripMinMax), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -310,7 +306,7 @@ Module SimData
                     SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
                     SimDesc = Description
 
-                    wrkSheet = wrkBook.Sheets(DataSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(DataSheet), Worksheet)
                     Dim RowCount As Integer = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -320,7 +316,7 @@ Module SimData
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ' Write data to IO tag sheet
-                    wrkSheet = wrkBook.Sheets(stripSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -329,7 +325,7 @@ Module SimData
                     wrkSheet.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    wrkSheet = wrkBook.Sheets(stripMinMax).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripMinMax), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -346,7 +342,7 @@ Module SimData
                     SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
                     SimDesc = Description
 
-                    wrkSheet = wrkBook.Sheets(DataSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(DataSheet), Worksheet)
                     Dim RowCount As Integer = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -356,7 +352,7 @@ Module SimData
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     'Write data to IO tag sheet
-                    wrkSheet = wrkBook.Sheets(stripSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -365,7 +361,7 @@ Module SimData
                     wrkSheet.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    wrkSheet = wrkBook.Sheets(stripMinMax).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripMinMax), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -380,7 +376,7 @@ Module SimData
                     SimIOAddr = Replace(SimIOAddr, "Data", "Fault")
                     SimDesc = Description & " CH_FLT"
 
-                    wrkSheet = wrkBook.Sheets(DataSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(DataSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -389,7 +385,7 @@ Module SimData
                     wrkSheet.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    wrkSheet = wrkBook.Sheets(stripSheet).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripSheet), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName
@@ -398,7 +394,7 @@ Module SimData
                     wrkSheet.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     wrkSheet.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    wrkSheet = wrkBook.Sheets(stripMinMax).Select
+                    wrkSheet = CType(wrkBook.Sheets(stripMinMax), Worksheet)
                     RowCount = wrkSheet.Cells(wrkSheet.Rows.Count, "A").End.xlUp.Row
                     wrkSheet.Range("A" & RowCount + 1).Select()
                     wrkSheet.Range("A" & RowCount + 1).Cells.Value = SimName

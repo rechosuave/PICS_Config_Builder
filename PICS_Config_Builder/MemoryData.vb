@@ -6,34 +6,36 @@ Module MemoryData
 
     Const xlPasteValues As Integer = Microsoft.Office.Interop.Excel.XlPasteType.xlPasteValues
 
-    Sub Generate_Memory_Data(ByRef wrkBook As Workbook)
+    Sub Generate_Memory_Data(ByRef wb As Workbook)
 
-        Call Unhide_All_Sheets(wrkBook)
+        Dim ws As Worksheet
 
-        Call Clear_Sheet_Type(wrkBook, "MemoryData")
-        Call Clear_Sheet_Type(wrkBook, "IOMem")
+        Call Unhide_All_Sheets(wb)
 
-        Call Generate_AI_Memory(wrkBook, "IOTags - AIn", "IOMem - AIn")
-        Call Generate_DI_Memory(wrkBook, "IOTags - DIn", "IOMem - DIn")
-        Call Generate_ValvesC_Memory(wrkBook, "IOTags - ValveC", "IOMem - ValveC")
-        Call Generate_ValvesMO_Memory(wrkBook, "IOTags - ValveMO", "IOMem - ValveMO")
-        Call Generate_Motor_Memory(wrkBook, "IOTags - Motor", "IOMem - Motor")
-        Call Generate_VSD_Memory(wrkBook, "IOTags - VSD", "IOMem - VSD")
+        Call Clear_Sheet_Type(wb, "MemoryData")
+        Call Clear_Sheet_Type(wb, "IOMem")
 
-        Call Remove_From_Descriptions(wrkBook)
-        Call Rem_Spaces(wrkBook, "IOMem - AIn", "F")
-        Call Rem_Spaces(wrkBook, "IOMem - DIn", "F")
-        Call Rem_Spaces(wrkBook, "IOMem - ValveC", "F")
-        Call Rem_Spaces(wrkBook, "IOMem - ValveMO", "F")
-        Call Rem_Spaces(wrkBook, "IOMem - ValveSO", "F")
-        Call Rem_Spaces(wrkBook, "IOMem - Motor", "F")
-        Call Rem_Spaces(wrkBook, "IOMem - VSD", "F")
+        Call Generate_AI_Memory(wb, "IOTags - AIn", "IOMem - AIn")
+        Call Generate_DI_Memory(wb, "IOTags - DIn", "IOMem - DIn")
+        Call Generate_ValvesC_Memory(wb, "IOTags - ValveC", "IOMem - ValveC")
+        Call Generate_ValvesMO_Memory(wb, "IOTags - ValveMO", "IOMem - ValveMO")
+        Call Generate_Motor_Memory(wb, "IOTags - Motor", "IOMem - Motor")
+        Call Generate_VSD_Memory(wb, "IOTags - VSD", "IOMem - VSD")
 
-        Call Copy_Memory_Data(wrkBook)
+        Call Remove_From_Descriptions(wb)
+        Call Rem_Spaces(wb, "IOMem - AIn", "F")
+        Call Rem_Spaces(wb, "IOMem - DIn", "F")
+        Call Rem_Spaces(wb, "IOMem - ValveC", "F")
+        Call Rem_Spaces(wb, "IOMem - ValveMO", "F")
+        Call Rem_Spaces(wb, "IOMem - ValveSO", "F")
+        Call Rem_Spaces(wb, "IOMem - Motor", "F")
+        Call Rem_Spaces(wb, "IOMem - VSD", "F")
 
-        wrkBook.Sheets("Instructions").Select()
+        Call Copy_Memory_Data(wb)
 
-        Call Hide_Sheets(wrkBook)
+        ws = CType(wb.Sheets("Instructions"), Worksheet)
+
+        Call Hide_Sheets(wb)
 
     End Sub
 
