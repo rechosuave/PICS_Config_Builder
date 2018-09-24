@@ -1,6 +1,6 @@
 
-Imports Office = Microsoft.Office.Interop
-Imports Excel = Microsoft.Office.Interop.Excel
+Imports Microsoft.Office.Interop
+Imports Microsoft.Office.Interop.Excel
 
 Module Utilities
 

@@ -1,7 +1,9 @@
 
-Imports Excel = Microsoft.Office.Interop.Excel
+Imports Microsoft.Office.Interop
+Imports Microsoft.Office.Interop.Excel
 
 Module ImportData
+    Public DirectoryName As String      'user selected directory for PICS Config File
 
     Sub Main()
 
@@ -13,27 +15,13 @@ Module ImportData
         End If
 
         'Create or update the Excel PICS Config file that will organize data
-        Dim pathname As New IO.FileInfo(XLProjectWB.Name)
-        Dim CurDir As String = pathname.Directory.Name
         Dim XLpicsWB As Workbook
-        Dim response As MsgBoxResult
-        Dim XLpicsFN As String
-
-        response = MsgBox("Create A New PICS Config Builder file?", vbYesNo)
-
-        If response = vbYes Then
-            XLpicsFN = InputBox("Enter New PICS Config Builder File Name:", "New File Name", "PICS_Config_Builder",,)
-            XLpicsWB = OpenXLpicsFN(CurDir + XLpicsFN)
-
-        Else
-            XLpicsFN = ""
-            XLpicsWB = OpenXLpicsFN(XLpicsFN)
-
+        XLpicsWB = OpenXLpicsFN()
+        If XLpicsWB Is Nothing Then 'No PICS Config file selected
+            Exit Sub
         End If
 
         Call Button_Import_Data(XLProjectWB)
-
-        XLpicsWB.Application.ScreenUpdating = False
 
         Call Generate_Sim_Data(XLpicsWB)
         Call Generate_Memory_Data(XLpicsWB)
@@ -46,11 +34,16 @@ Module ImportData
         Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
         Call Export_Wire_Data(XLpicsWB, outFolder)
 
-        XLpicsWB.Application.ScreenUpdating = False
-        XLpicsWB.Close()
+        If XLpicsWB.Name.Contains(".xlsm") Then     'Re-enable Excel application macros security settings prior to closing file
+            XLpicsWB.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
+            XLpicsWB.Close()
+        Else
+            XLpicsWB.Close()
+
+        End If
 
         If XLProjectWB.Name.Contains(".xlsm") Then  'Re-enable Excel application macros security settings prior to closing file
-            XLProjectWB.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
+            XLProjectWB.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
             XLProjectWB.Close()
         Else
             XLProjectWB.Close()
@@ -138,88 +131,85 @@ Module ImportData
 
     End Sub
 
-    Public Function GetProjectFN() As String
-        ' OpenFile method used to quickly open a file from the dialog box. 
-        ' The file Is opened In read-only mode For security purposes. 
-        ' To open a file In read/write mode, you must use another method, such as FileStream.
-
-        Dim title, fnXtnFilter As String
-
-        title = "Select Project Config File"
-        fnXtnFilter = "Excel files (*.xls;*.xlsm)"
-
-        Dim openFileDialog1 = New OpenFileDialog()
-
-        openFileDialog1.Title = title
-        openFileDialog1.InitialDirectory = "c:\\"
-        openFileDialog1.Filter = fnXtnFilter
-        openFileDialog1.FilterIndex = 2
-        openFileDialog1.RestoreDirectory = True
-
-        If (openFileDialog1.ShowDialog() = DialogResult.OK) Then
-            Return openFileDialog1.FileName
-        Else
-            Return Nothing
-
-        End If
-
-    End Function
-
     Function OpenXLProjectFN() As Workbook
 
         'Select and open the Excel project file (PLC IO Mapping) that will be used to create PICS simulation files
-        Dim XLApp As Excel.Application
-        Dim XLWrkBook As Excel.Workbook
-        Dim XLWrkSheet As Excel.Worksheet
+        Dim XLApp As New Application
+        Dim XLWrkBook As Workbook
+        Dim XLWrkSheet As Worksheet
         Dim sFileN As String
         Dim title = "Open - Select Project Config File"
         Dim fnXtnFilter = "Excel Files (*.xls;*.xlsm),*.xls;*xlsm"
 
         XLApp = CType(CreateObject("Excel.Application"), Excel.Application)
         sFileN = CType(XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title), String)
+        DirectoryName = IO.Path.GetDirectoryName(sFileN)
 
-        If sFileN = False Then 'operator cancelled operation to open the project file
+        If sFileN Is Nothing Then 'operator cancelled operation to open the project file
             XLApp.Quit()
             Return Nothing
         End If
 
-        If sFileN.Contains(".xlsm") Then  'Disable Excel application macros prior to opening file
-            XLApp.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
+
+        If sFileN.Contains(".xlsm") Then    'Disable Excel application macros security settings when opening file
+            XLApp.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
         End If
 
         XLWrkBook = XLApp.Workbooks.Open(Filename:=sFileN, ReadOnly:=True)
         XLWrkSheet = CType(XLWrkBook.ActiveSheet, Worksheet)
+        XLWrkSheet.Visible = True
 
-        XLWrkSheet.Visible = CType(True, Excel.XlSheetVisibility)
-
-        Return CType(XLWrkBook, Workbook)
+        Return XLWrkBook
 
     End Function
 
-    Function OpenXLpicsFN(ByVal FileName As String) As Workbook
+    Function OpenXLpicsFN() As Workbook
 
         'Select or create PICS Excel file that will be used to create PICS simulation files
-        Dim XLApp As Excel.Application
-        Dim XLWrkBook As Excel.Workbook
-        Dim XLWrkSheet As Excel.Worksheet
+        Dim XLApp As New Application
+        Dim XLWrkBook As Workbook
+        Dim XLWrkSheet As Worksheet
         Dim title = "Open - Select PICS Config File"
         Dim fnXtnFilter = "Excel Files (*.xls;*.xlsm),*.xls;*xlsm"
+        Dim response As MsgBoxResult
+        Dim fn, XLpicsFN As String
 
         XLApp = CType(CreateObject("Excel.Application"), Excel.Application)
 
-        If FileName <> "" Then 'open existing or create a new PICS Config Excel File
-            XLWrkBook = XLApp.Workbooks.Open(FileName)
-            XLWrkSheet = CType(XLWrkBook.ActiveSheet, Excel.Worksheet)
+        response = MsgBox("Create A New PICS Config Builder file?", vbYesNo)
+        If response = vbYes Then
+            fn = InputBox("Enter New PICS Config Builder File Name:", "New File Name", "PICS_Config_Builder")
+            XLpicsFN = DirectoryName & "\" & fn & ".xlsx"
+
         Else
-            FileName = CType(XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title), String)
-            XLWrkBook = XLApp.Workbooks.Open(FileName)
-            XLWrkSheet = CType(XLWrkBook.ActiveSheet, Excel.Worksheet)
+            ' if response is no  - assume that you want to open an existing PICS file
+            response = MsgBox("Open an existing PICS Config Builder file?", vbYesNo)
+            If response = vbYes Then
+                XLpicsFN = CType(XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title), String)
+            Else
+                OpenXLpicsFN = Nothing
+                Exit Function
+            End If
 
         End If
 
-        XLWrkSheet.Visible = CType(True, Excel.XlSheetVisibility)
+        If IO.File.Exists(XLpicsFN) Then     'open existing workbook for PICS Config File
+            If XLpicsFN.Contains(".xlsm") Then  'Disable Excel application macros prior to opening file
+                XLApp.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
+            End If
+            XLWrkBook = XLApp.Workbooks.Open(XLpicsFN)
+            XLWrkSheet = XLWrkBook.ActiveSheet
+        Else
+            XLWrkBook = XLApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet)  ' create new workbook for PICS Config file
+            XLWrkBook.SaveAs(XLpicsFN)
+            XLWrkSheet = XLWrkBook.ActiveSheet
 
-        Return CType(XLWrkBook, Workbook)
+        End If
+
+        XLWrkSheet.Visible = True
+
+        Return XLWrkBook
 
     End Function
+
 End Module

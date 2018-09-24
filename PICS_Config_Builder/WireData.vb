@@ -1,13 +1,14 @@
-Imports Excel = Microsoft.Office.Interop.Excel
+Imports Microsoft.Office.Interop
+Imports Microsoft.Office.Interop.Excel
 
 Module WireData
 
-    Const xlPasteValues As Integer = Excel.XlPasteType.xlPasteValues
-    Const xlWhole As Integer = Excel.XlLookAt.xlWhole
-    Const xlPart As Integer = Excel.XlLookAt.xlPart
-    Const xlByRows As Integer = Excel.XlSearchOrder.xlByRows
-    Const xlNext As Integer = Excel.XlSearchDirection.xlNext
-    Const xlTextWindows As Integer = Excel.XlFileFormat.xlTextWindows
+    Const xlPasteValues As Integer = XlPasteType.xlPasteValues
+    Const xlWhole As Integer = XlLookAt.xlWhole
+    Const xlPart As Integer = XlLookAt.xlPart
+    Const xlByRows As Integer = XlSearchOrder.xlByRows
+    Const xlNext As Integer = XlSearchDirection.xlNext
+    Const xlTextWindows As Integer = XlFileFormat.xlTextWindows
 
 
     Public CPU_Name As String
