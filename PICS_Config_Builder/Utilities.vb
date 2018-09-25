@@ -4,8 +4,6 @@ Imports Microsoft.Office.Interop.Excel
 
 Module Utilities
 
-    Const xlCSV As Integer = Excel.XlFileFormat.xlCSV
-
     Public Sub Clear_Sheet(ByRef wrkSheet As Worksheet)
 
         If InStr(wrkSheet.Name, "IOTags") > 0 Then
@@ -29,33 +27,25 @@ Module Utilities
 
     End Sub
 
-    Public Sub Clear_Sheet_Type(ByRef wrkBook As Workbook, typeStr As String)
+    Public Sub Clear_Sheet_Type(typeStr As String)
 
-        Dim wrkSheet As Worksheet
-        Dim sheetCount As Integer = wrkBook.Sheets.Count
+        Dim ws As Worksheet
+        Dim sheetCount As Integer = XLpicsWB.Sheets.Count
 
-        For i = 1 To sheetCount
-            wrkSheet = wrkBook.Sheets(i).Select
-
-            If InStr(wrkSheet.Name, typeStr) > 0 Then
-                Call Clear_Sheet(wrkSheet)
-            End If
-
-        Next
+        If sheetCount <> 1 Then     ' new PICS workbook with only 1 sheet (IO Sheet)
+            For i = 1 To sheetCount
+                ws = XLpicsWB.Sheets(i)
+                If InStr(ws.Name, typeStr) > 0 Then Call Clear_Sheet(ws)
+            Next
+        End If
 
     End Sub
 
-    Public Sub Clear_All_Sheets(ByRef wrkBook As Workbook)
-
-        Clear_Sheet_Type(wrkBook, "")
-
-    End Sub
     Public Sub Clear_All_Sheets()
 
+        Clear_Sheet_Type("")
 
     End Sub
-
-
 
     Public Sub Reset_Sheet(ByRef wrkBook As Workbook, sheet As String)
 
@@ -71,9 +61,9 @@ Module Utilities
 
     End Sub
 
-    Public Function Find_Header_Column(ByRef wrkBook As Workbook, sheet As String, header As String) As Integer
+    Public Function Find_Header_Column(sheet As String, header As String) As Integer
 
-        Dim wrkSheet As Worksheet = wrkBook.Sheets(sheet)
+        Dim wrkSheet As Worksheet = XLpicsWB.Sheets(sheet)
 
         Dim searchRng As Excel.Range = wrkSheet.Range("A1").Select
 
@@ -149,13 +139,11 @@ Module Utilities
         Dim topFolder As String
         Dim subFolder As String
         Dim pathName As String
-        Dim CPU_Name As String
 
         pathName = ActiveWorkbook.Path
-        CPU_Name = Get_CPU_Name(ActiveWorkbook)
 
         topFolder = "\PICS_Files"
-        subFolder = "\" & CPU_Name & Format(Now(), "_yyyymmdd_HhNnSs")
+        subFolder = "\" & ImportData.CPU_Name & Format(Now(), "_yyyymmdd_HhNnSs")
 
         outFolder = pathName & topFolder
         If Len(Dir(outFolder, vbDirectory)) = 0 Then
@@ -173,20 +161,19 @@ Module Utilities
 
     Sub Export_CSV(outFolder As String, sheetStr As String, saveName As String)
 
-        ' Declare variables, create new Excel Application object
-        Dim XLNewApp As Excel.Application = CType(CreateObject("Excel.Application"), Excel.Application)
-        Dim XLNewBook As Excel.Workbook = XLNewApp.Workbooks.Add
-        Dim XLWrkSheet As Excel.Worksheet = CType(XLNewBook.ActiveSheet, Worksheet)
+        ' Declare variables, create new Excel workbook object
+        Dim wb As Workbook = XLApp.Workbooks.Add
+        Dim ws As Worksheet = wb.ActiveSheet
         Dim savePath As String = outFolder & "\" & saveName
 
-        XLWrkSheet.Sheets(sheetStr).Visible = True
-        XLWrkSheet.Sheets(sheetStr).Copy(Before:=XLNewBook.Sheets(1))
-        XLWrkSheet.Sheets(sheetStr).Visible = False
-        XLNewApp.DisplayAlerts = False
-        XLNewBook.SaveAs(Filename:=savePath, FileFormat:=xlCSV)
+        ws.Sheets(sheetStr).Visible = True
+        ws.Sheets(sheetStr).Copy(Before:=wb.Sheets(1))
+        ws.Sheets(sheetStr).Visible = False
+        wb.DisplayAlerts = False
+        wb.SaveAs(Filename:=savePath, FileFormat:=XlFileFormat.xlCSV)
 
-        XLNewBook.Close(False)
-        XLNewApp.DisplayAlerts = True
+        wb.Close(False)
+        wb.DisplayAlerts = True
 
     End Sub
 
@@ -206,7 +193,7 @@ Module Utilities
 
         End If
 
-        Get_CPU_Name = CPU_Name
+        Return CPU_Name
 
     End Function
 
