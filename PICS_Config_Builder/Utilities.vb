@@ -4,25 +4,25 @@ Imports Microsoft.Office.Interop.Excel
 
 Module Utilities
 
-    Public Sub Clear_Sheet(ByRef wrkSheet As Worksheet)
+    Public Sub Clear_Sheet(ByRef ws As Worksheet)
 
-        If InStr(wrkSheet.Name, "IOTags") > 0 Then
-            wrkSheet.Range("A2:E9999").Clear()
-        ElseIf InStr(wrkSheet.Name, "IOMem") > 0 Then
-            wrkSheet.Range("A2:F9999").Clear()
-        ElseIf InStr(wrkSheet.Name, "SimData") > 0 Then
-            wrkSheet.Range("A2:E9999").Clear()
-        ElseIf InStr(wrkSheet.Name, "MinMax") > 0 Then
-            wrkSheet.Range("A2:E9999").Clear()
-        ElseIf InStr(wrkSheet.Name, "MemoryData") > 0 Then
-            wrkSheet.Range("A2:F9999").Clear()
-        ElseIf InStr(wrkSheet.Name, "ControlNetData") > 0 Then
-            wrkSheet.Range("A2:F9999").Clear()
-        ElseIf wrkSheet.Name = "IO Sheets" Then
+        If InStr(ws.Name, "IOTags") > 0 Then
+            ws.Range("A2:E9999").Clear()
+        ElseIf InStr(ws.Name, "IOMem") > 0 Then
+            ws.Range("A2:F9999").Clear()
+        ElseIf InStr(ws.Name, "SimData") > 0 Then
+            ws.Range("A2:E9999").Clear()
+        ElseIf InStr(ws.Name, "MinMax") > 0 Then
+            ws.Range("A2:E9999").Clear()
+        ElseIf InStr(ws.Name, "MemoryData") > 0 Then
+            ws.Range("A2:F9999").Clear()
+        ElseIf InStr(ws.Name, "ControlNetData") > 0 Then
+            ws.Range("A2:F9999").Clear()
+        ElseIf ws.Name = "IO Sheets" Then
             ' Clear extra headers
-            wrkSheet.Range("B1:AG9999").Clear()
+            ws.Range("B1:AG9999").Clear()
             ' Clear data
-            wrkSheet.Range("A2:AG9999").Clear()
+            ws.Range("A2:AG9999").Clear()
         End If
 
     End Sub
@@ -32,12 +32,10 @@ Module Utilities
         Dim ws As Worksheet
         Dim sheetCount As Integer = XLpicsWB.Sheets.Count
 
-        If sheetCount <> 1 Then     ' new PICS workbook with only 1 sheet (IO Sheet)
-            For i = 1 To sheetCount
-                ws = XLpicsWB.Sheets(i)
-                If InStr(ws.Name, typeStr) > 0 Then Call Clear_Sheet(ws)
-            Next
-        End If
+        For i = 1 To sheetCount
+            ws = XLpicsWB.Sheets(i)
+            If InStr(ws.Name, typeStr) > 0 Then Call Clear_Sheet(ws)
+        Next
 
     End Sub
 
@@ -61,24 +59,22 @@ Module Utilities
 
     End Sub
 
-    Public Function Find_Header_Column(sheet As String, header As String) As Integer
+    Public Function Find_Header_Column(shtName As String, header As String) As Integer
 
-        Dim wrkSheet As Worksheet = XLpicsWB.Sheets(sheet)
-
-        Dim searchRng As Excel.Range = wrkSheet.Range("A1").Select
+        Dim ws As Worksheet = XLpicsWB.Sheets(shtName)
+        Dim searchRng As Range = ws.Range("A1")
 
         ' Find either the column or nothing
         Do While searchRng.Value <> "" And searchRng.Value <> header
             searchRng = searchRng.Offset(0, 1)
         Loop
 
-        ' If column found, return it.
-        ' Otherwise zero.
+        ' If column found, return it  -- Otherwise zero.
         If searchRng.Value = header Then
-            Find_Header_Column = searchRng.Column
+            Return searchRng.Column
         Else
-            Find_Header_Column = 0
             MsgBox("Column '" & header & "' was not found. Please contact a VBA developer.", vbOKOnly, "Error: Config Header")
+            Return 0
         End If
 
     End Function
@@ -112,26 +108,6 @@ Module Utilities
         Next ws
 
     End Sub
-
-    Public Sub Unhide_All_Sheets(ByRef wrkBook As Workbook)
-
-        For Each ws In wrkBook.Worksheets
-            ws.Visible = True
-        Next ws
-
-    End Sub
-
-    Public Function Worksheet_Exists(ByRef wb As Workbook, sheetName As String) As Boolean
-
-        Worksheet_Exists = False
-
-        For i = 1 To wb.Worksheets.Count
-            If wb.Worksheets(i).Name = sheetName Then
-                Worksheet_Exists = True
-            End If
-        Next i
-
-    End Function
 
     Public Function Create_Output_Folder(ByRef ActiveWorkbook As Workbook) As String
 

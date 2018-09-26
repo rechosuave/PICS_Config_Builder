@@ -3,73 +3,56 @@ Imports Microsoft.Office.Interop.Excel
 
 Module WireData
 
-    Const xlPasteValues As Integer = XlPasteType.xlPasteValues
-    Const xlWhole As Integer = XlLookAt.xlWhole
-    Const xlPart As Integer = XlLookAt.xlPart
-    Const xlByRows As Integer = XlSearchOrder.xlByRows
-    Const xlNext As Integer = XlSearchDirection.xlNext
-    Const xlTextWindows As Integer = XlFileFormat.xlTextWindows
-
-
-    Public CPU_Name As String
     Public Template_Name As String
 
-    Sub Generate_Wire_Data(ByRef wrkBook As Workbook)
+    Sub Generate_Wire_Data()
 
-        Call Unhide_All_Sheets(wrkBook)
-
-        CPU_Name = Get_CPU_Name(wrkBook)
         Template_Name = "Object"
 
-        'Call Create_Wire_AIn_Sheets
-        Call Create_Basic_Wire_Sheets(wrkBook, "AIn", "*_Inp_?V")
-        Call Create_Basic_Wire_Sheets(wrkBook, "DIn", "*_Inp_PV")
-        Call Create_Basic_Wire_Sheets(wrkBook, "Motor", "*_Out_Run")
-        Call Create_Basic_Wire_Sheets(wrkBook, "ValveC", "*_Out_CV")
-        Call Create_Basic_Wire_Sheets(wrkBook, "ValveMO", "*_Out_Open")
-        Call Create_Basic_Wire_Sheets(wrkBook, "ValveSO", "*_Out")
-        Call Create_Basic_Wire_Sheets(wrkBook, "VSD", "*_Out_SpeedRef")
+        ' What does Create_Wire_AIn_Sheets do?
+        Call Create_Basic_Wire_Sheets("AIn", "*_Inp_?V")
+        Call Create_Basic_Wire_Sheets("DIn", "*_Inp_PV")
+        Call Create_Basic_Wire_Sheets("Motor", "*_Out_Run")
+        Call Create_Basic_Wire_Sheets("ValveC", "*_Out_CV")
+        Call Create_Basic_Wire_Sheets("ValveMO", "*_Out_Open")
+        Call Create_Basic_Wire_Sheets("ValveSO", "*_Out")
+        Call Create_Basic_Wire_Sheets("VSD", "*_Out_SpeedRef")
 
-        Call Color_Wire_Tabs(wrkBook)
-
-        wrkBook.Sheets("Instructions").Select
-
-        Call Hide_Sheets(wrkBook)
+        Call Color_Wire_Tabs()
 
     End Sub
 
-    Private Function GetRowGap(ByRef wrkBook As Workbook, sheet As String) As Integer
+    Private Function GetRowGap(ByRef sheet As String) As Integer
 
-        Dim Count As Integer
-        Count = 0
-
-        Dim wrkSht As Worksheet
-        wrkSht = wrkBook.Sheets(sheet)
+        Dim Count As Integer = 0
+        Dim ws As Worksheet
+        ws = XLpicsWB.Sheets(sheet)
 
         Dim itemRng As Excel.Range
-        itemRng = wrkSht.Range("B1")
+        itemRng = ws.Range("B1")
 
         Do While ExtractNumber(itemRng.Value) = 1
             itemRng = itemRng.Offset(1, 0)
             Count = Count + 1
         Loop
 
-        GetRowGap = Count
+        Return Count
 
     End Function
 
-    Private Function GetMaxItems(ByRef wrkBook As Workbook, sheet As String) As Integer
+    Private Function GetMaxItems(ByRef sheet As String) As Integer
 
         Dim toSub As String
         Dim lastRng As Excel.Range
-        lastRng = wrkBook.Sheets(sheet).Range("B1").End.xlDown
+
+        lastRng = XLpicsWB.Sheets(sheet).Range("B1").End(XlDirection.xlDown)
         toSub = lastRng.Value
 
-        GetMaxItems = ExtractNumber(toSub)
+        Return ExtractNumber(toSub)
 
     End Function
 
-    Private Function ExtractNumber(str As String) As Integer
+    Private Function ExtractNumber(ByRef str As String) As Integer
 
         Dim length As Integer
         length = 1
@@ -78,32 +61,34 @@ Module WireData
             length = length + 1
         Loop
 
-        ExtractNumber = CInt(Right(str, length - 1))
+        Return CInt(Right(str, length - 1))
 
     End Function
 
-    Private Function Find_Column(ByRef wrkBook As Workbook, sheet As String, str As String) As Integer
+    Private Function Find_Column(ByRef sheet As String, ByVal str As String) As Integer
 
-        Find_Column = wrkBook.Sheets(sheet).Range("A:ZZ").Find(str, LookAt:=xlWhole, SearchOrder:=xlByRows, SearchDirection:=xlNext).Column
+        Find_Column = XLpicsWB.Sheets(sheet).Range("A:ZZ").Find(str, LookAt:=XlLookAt.xlPart,
+                                                               SearchOrder:=XlSearchOrder.xlByRows,
+                                                               SearchDirection:=XlSearchDirection.xlNext).Column
 
     End Function
 
-    Sub ValidateOPC1(ByRef wrkBook As Workbook, sheetStr As String)
+    Sub ValidateOPC1(ByRef sheetStr As String)
         '
-        ' Pre-Pass OPC1 tags for existance
-        ' Checks against SimData sheet for existance of OPC1 tag that it is looking to use
+        ' Pre-Pass OPC1 tags for existence
+        ' Checks against SimData sheet for existence of OPC1 tag that it is looking to use
 
         Dim searchRng As Excel.Range, firstMatch As Excel.Range = Nothing
 
-        Dim wrkSht As Worksheet
+        Dim ws As Worksheet
 
-        wrkSht = wrkBook.Sheets(sheetStr)
+        ws = XLpicsWB.Sheets(sheetStr)
 
-        searchRng = wrkSht.Range("A1").Value
+        searchRng = ws.Range("A1").Value
 
         Do While Not searchRng Is Nothing
 
-            searchRng = wrkSht.Range("A:ZZ").Find(What:="OPC1.", After:=searchRng, LookAt:=xlPart)
+            searchRng = ws.Range("A:ZZ").Find(What:="OPC1.", After:=searchRng, LookAt:=XlLookAt.xlPart)
 
             Dim output, parseArr(), parse As String
 
@@ -139,7 +124,7 @@ Module WireData
                 tag = result(0)
                 tag = Replace(tag, "OPC1.", "")
 
-                If Is_Sim_Data(wrkBook, tag) Then
+                If Is_Sim_Data(tag) Then
                     output = checkStr
                     Exit For
                 End If
@@ -158,44 +143,40 @@ Module WireData
 
     End Sub
 
-    Private Function Is_Sim_Data(ByRef wrkBook As Workbook, str As String) As Boolean
+    Private Function Is_Sim_Data(ByRef str As String) As Boolean
 
-        Dim wrkSht As Worksheet = wrkBook.Sheets("SimData")
+        Dim ws As Worksheet = XLpicsWB.Sheets("SimData")
 
         Dim searchRng As Excel.Range
-        searchRng = wrkSht.Range("A:A").Find(str)
+        searchRng = ws.Range("A:A").Find(str)
 
         Is_Sim_Data = Not (searchRng Is Nothing)
 
     End Function
 
-    Sub ReplaceOPC1(ByRef wrkBook As Workbook, NewSheetName As String)
+    Sub ReplaceOPC1(ByRef NewSheetName As String)
         '
         ' Replaces OPC1. in a sheet with the CPU_Name
         '
-        wrkBook.Sheets(NewSheetName).UsedRange.Select
+        XLpicsWB.Sheets(NewSheetName).UsedRange.Select
 
-        wrkBook.Sheets(NewSheetName).Cells.Replace(What:="OPC1.",
-                            Replacement:=CPU_Name & ".",
-                            LookAt:=xlPart,
-                            SearchOrder:=xlByRows,
-                            MatchCase:=False,
-                            SearchFormat:=False,
-                            ReplaceFormat:=False)
-        wrkBook.Sheets(NewSheetName).Range("A1").Select
+        XLpicsWB.Sheets(NewSheetName).Cells.Replace(What:="OPC1.",
+                            Replacement:=CPU_Name & ".", LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
+                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
+        XLpicsWB.Sheets(NewSheetName).Range("A1").Select
 
     End Sub
 
-    Sub Color_Wire_Tabs(ByRef wb As Workbook)
+    Sub Color_Wire_Tabs()
 
+        ' assign a color to each wire or template worksheet tabs
         Dim ws As Worksheet
 
-        For Each ws In wb.Worksheets
-
+        For Each ws In XLpicsWB.Worksheets
             If InStr(ws.Name, "Wire") > 0 Then
-                wb.Sheets(ws.Name).Tab.ColorIndex = 24
+                XLpicsWB.Sheets(ws.Name).Tab.ColorIndex = 24
                 If InStr(ws.Name, "Template") > 0 Then
-                    wb.Sheets(ws.Name).Tab.ColorIndex = 49
+                    XLpicsWB.Sheets(ws.Name).Tab.ColorIndex = 49
                 End If
             End If
 
@@ -203,7 +184,7 @@ Module WireData
 
     End Sub
 
-    Sub Delete_Wire_Sheets(ByRef wb As Workbook, sheetTemplate As String)
+    Sub Delete_Wire_Sheets(ByVal sheetTemplate As String)
 
         Dim sheetName As String
         Dim ws As Worksheet
@@ -211,49 +192,49 @@ Module WireData
         For i = 1 To 100     'Increase this value if there are ever more than 15 Wire Sheets
             sheetName = Replace(sheetTemplate, " Template", "_") & i
 
-            ' Deletes existing sheets if necessary
-            For Each ws In wb.Worksheets
+            ' Delete existing sheets if necessary
+            For Each ws In XLpicsWB.Worksheets
                 If ws.Name = sheetName Then
-                    wb.Application.DisplayAlerts = False
+                    XLpicsWB.Application.DisplayAlerts = False
                     ws.Delete()
-                    wb.Application.DisplayAlerts = True
+                    XLpicsWB.Application.DisplayAlerts = True
                 End If
             Next ws
         Next i
 
     End Sub
 
-    Sub Create_Basic_Wire_Sheets(ByRef wb As Workbook, typeStr As String, countStr As String)
+    Sub Create_Basic_Wire_Sheets(ByVal typeStr As String, ByVal countStr As String)
 
         Dim sheetTemplate As String = "Wire_" & typeStr & " Template"
         Dim sourceSheet As String = "IOTags - " & typeStr
         Dim minMaxSheet As String = "MinMax - " & typeStr
-        Dim minMax As Boolean = Worksheet_Exists(wb, minMaxSheet)
-        Dim ws As Worksheet = wb.Sheets(sourceSheet).Select
-        Dim RowGap As Integer = GetRowGap(wb, sheetTemplate)
+        Dim minMax As Boolean = WS_Exists(minMaxSheet)
+        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
+        Dim RowGap As Integer = GetRowGap(sheetTemplate)
         Dim ItemCount As Integer = ws.Cells.CountIf("A:A", countStr)
-        Dim maxItemCount As Integer = GetMaxItems(wb, sheetTemplate)
+        Dim maxItemCount As Integer = GetMaxItems(sheetTemplate)
         Dim ReqSheets As Integer = ws.Cells.RoundUp(ItemCount / maxItemCount, 0)
         Dim itemRng As Excel.Range = ws.Range("A1")
         Dim InMinCol, InMaxCol, OutMinCol, OutMaxCol As Integer
         Dim EUMinCol, EUMaxCol, RawMinCol, RawMaxCol, RawFltCol As Integer
 
-        Call Delete_Wire_Sheets(wb, sheetTemplate)
+        Call Delete_Wire_Sheets(sheetTemplate)
 
         If minMax Then
 
-            InMinCol = Find_Column(wb, minMaxSheet, "InputMin")
-            InMaxCol = Find_Column(wb, minMaxSheet, "InputMax")
-            OutMinCol = Find_Column(wb, minMaxSheet, "OutputMin")
-            OutMaxCol = Find_Column(wb, minMaxSheet, "OutputMax")
+            InMinCol = Find_Column(minMaxSheet, "InputMin")
+            InMaxCol = Find_Column(minMaxSheet, "InputMax")
+            OutMinCol = Find_Column(minMaxSheet, "OutputMin")
+            OutMaxCol = Find_Column(minMaxSheet, "OutputMax")
 
             If typeStr = "AIn" Then
 
-                EUMinCol = Find_Column(wb, sheetTemplate, "iAI_EU_Min") + 1
-                EUMaxCol = Find_Column(wb, sheetTemplate, "iAI_EU_Max") + 1
-                RawMinCol = Find_Column(wb, sheetTemplate, "iAI_Raw_Min") + 1
-                RawMaxCol = Find_Column(wb, sheetTemplate, "iAI_Raw_Max") + 1
-                RawFltCol = Find_Column(wb, sheetTemplate, "iAI_Raw_Flt") + 1
+                EUMinCol = Find_Column(sheetTemplate, "iAI_EU_Min") + 1
+                EUMaxCol = Find_Column(sheetTemplate, "iAI_EU_Max") + 1
+                RawMinCol = Find_Column(sheetTemplate, "iAI_Raw_Min") + 1
+                RawMaxCol = Find_Column(sheetTemplate, "iAI_Raw_Max") + 1
+                RawFltCol = Find_Column(sheetTemplate, "iAI_Raw_Flt") + 1
 
             End If
 
@@ -263,11 +244,12 @@ Module WireData
 
             Dim NewSheetName As String = Strings.Replace(sheetTemplate, " Template", "_") & shtIndex
 
-            wb.Sheets(sheetTemplate).Copy(Before:=wb.Sheets("Wire_AIn Template"))
-            wb.ActiveSheet.Unprotect
-            wb.ActiveSheet.Name = NewSheetName
-            Dim wrkSheet As Worksheet = wb.ActiveSheet.Name
-            wrkSheet.Range("A1").Cells.Value = "_Wire_" & typeStr & "_" & shtIndex
+            XLpicsWB.Sheets(sheetTemplate).Copy(Before:=XLpicsWB.Sheets("Wire_AIn Template"))
+            XLpicsWB.ActiveSheet.Unprotect
+            XLpicsWB.ActiveSheet.Name = NewSheetName
+            ws = XLpicsWB.ActiveSheet
+
+            ws.Range("A1").Cells.Value = "_Wire_" & typeStr & "_" & shtIndex
 
             For itemIndex = 1 To maxItemCount
 
@@ -295,8 +277,8 @@ Module WireData
 
                     Dim TagName = re.Replace(nextRng.Value, "")
 
-                    wrkSheet.Cells.Replace(What:=Template_Name & itemNum, Replacement:=TagName, LookAt:=xlPart,
-                                             SearchOrder:=xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
+                    ws.Cells.Replace(What:=Template_Name & itemNum, Replacement:=TagName, LookAt:=XlLookAt.xlPart,
+                                             SearchOrder:=XlSearchOrder.xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
 
                     If minMax Then
                         If typeStr = "AIn" Then
@@ -304,19 +286,19 @@ Module WireData
                             Dim EU_Min, EU_Max, Raw_Min, Raw_Max, Raw_Flt As Double
 
                             Dim CurrentRow As Integer = RowGap * (itemIndex - 1) + 1
-                            Dim ItemRow As Excel.Range = wb.Sheets(minMaxSheet).Range("A:A").Find(nextRng.Value).Row
-                            EU_Min = wb.Sheets(minMaxSheet).Cells(ItemRow, InMinCol).Value
-                            EU_Max = wb.Sheets(minMaxSheet).Cells(ItemRow, InMaxCol).Value
-                            Raw_Min = wb.Sheets(minMaxSheet).Cells(ItemRow, OutMinCol).Value
-                            Raw_Max = wb.Sheets(minMaxSheet).Cells(ItemRow, OutMaxCol).Value
+                            Dim ItemRow As Excel.Range = XLpicsWB.Sheets(minMaxSheet).Range("A:A").Find(nextRng.Value).Row
+                            EU_Min = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, InMinCol).Value
+                            EU_Max = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, InMaxCol).Value
+                            Raw_Min = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, OutMinCol).Value
+                            Raw_Max = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, OutMaxCol).Value
                             Raw_Flt = 0.8 * Raw_Min
 
                             If Raw_Max > 0 Then
-                                wrkSheet.Cells(CurrentRow, EUMinCol).Cells.Value = EU_Min
-                                wrkSheet.Cells(CurrentRow, EUMaxCol).Cells.Value = EU_Max
-                                wrkSheet.Cells(CurrentRow, RawMinCol).Cells.Value = Raw_Min
-                                wrkSheet.Cells(CurrentRow, RawMaxCol).Cells.Value = Raw_Max
-                                wrkSheet.Cells(CurrentRow, RawFltCol).Cells.Value = Raw_Flt
+                                ws.Cells(CurrentRow, EUMinCol).Cells.Value = EU_Min
+                                ws.Cells(CurrentRow, EUMaxCol).Cells.Value = EU_Max
+                                ws.Cells(CurrentRow, RawMinCol).Cells.Value = Raw_Min
+                                ws.Cells(CurrentRow, RawMaxCol).Cells.Value = Raw_Max
+                                ws.Cells(CurrentRow, RawFltCol).Cells.Value = Raw_Flt
                             End If
 
                         End If
@@ -328,10 +310,10 @@ Module WireData
 
             Next
 
-            wrkSheet.Range("A1").Select()
+            ws.Range("A1").Select()
 
-            Call ValidateOPC1(wb, NewSheetName)
-            Call ReplaceOPC1(wb, NewSheetName)
+            Call ValidateOPC1(NewSheetName)
+            Call ReplaceOPC1(NewSheetName)
         Next
 
     End Sub
@@ -344,34 +326,35 @@ Module WireData
 
         savePath = outFolder & "\"
 
-        Save_Sheets(wb, "AIn", savePath)
-        Save_Sheets(wb, "DIn", savePath)
-        Save_Sheets(wb, "Motor", savePath)
-        Save_Sheets(wb, "ValveC", savePath)
-        Save_Sheets(wb, "ValveMO", savePath)
-        Save_Sheets(wb, "ValveSO", savePath)
-        Save_Sheets(wb, "VSD", savePath)
+        Save_Sheets("AIn", savePath)
+        Save_Sheets("DIn", savePath)
+        Save_Sheets("Motor", savePath)
+        Save_Sheets("ValveC", savePath)
+        Save_Sheets("ValveMO", savePath)
+        Save_Sheets("ValveSO", savePath)
+        Save_Sheets("VSD", savePath)
 
         wb.Application.DisplayAlerts = True
 
     End Sub
 
-    Private Sub Save_Sheets(ByRef wb As Workbook, typeStr As String, savePath As String)
+    Private Sub Save_Sheets(ByVal typeStr As String, ByRef savePath As String)
 
         Dim i As Integer = 1
         Dim wsName As String = "Wire_" & typeStr & "_" & i
 
-        Do While Worksheet_Exists(wb, wsName)
+        Do While WS_Exists(wsName)
 
             Dim book As Workbook
 
-            book = CreateObject("Excel.Application")
+            book = XLApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet)  ' create new workbook 
+
             Dim Count As Integer = book.Worksheets.Count
             book.Sheets(wsName).Copy(book.Worksheets(1))
 
             book.Worksheets(1).Range("A1").EntireRow.Insert
             book.Worksheets(1).Range("A1").Value = ";PICS for Windows - Device Wiring Export V1.10"
-            book.Worksheets(1).SaveAs(savePath & wsName & ".wir", xlTextWindows)
+            book.Worksheets(1).SaveAs(savePath & wsName & ".wir", XlFileFormat.xlTextWindows)
             book.Close(False)
             book = Nothing
 

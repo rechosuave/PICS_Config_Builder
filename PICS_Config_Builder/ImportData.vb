@@ -29,9 +29,9 @@ Module ImportData
 
         Call Import_Data()
 
-        '       Call Generate_Sim_Data()
-        'Call Generate_Memory_Data(XLpicsWB)
-        'Call Generate_Wire_Data(XLpicsWB)
+        Call Generate_Sim_Data()
+        Call Generate_Memory_Data()
+        Call Generate_Wire_Data()
 
         'Dim outFolder As String
         'outFolder = Create_Output_Folder(XLpicsWB)
@@ -47,6 +47,7 @@ Module ImportData
         XLpicsWB.Application.ScreenUpdating = True
         XLpicsWB.Application.DisplayAlerts = True 'Turn safety alerts back On
         XLpicsWB.Close()
+        XLApp.Quit()
 
     End Sub
 
@@ -58,10 +59,8 @@ Module ImportData
         Dim ws As Worksheet
         Dim shtCount As Integer = XLpicsWB.Sheets.Count
 
-        For i = 1 To shtCount
-            If XLpicsWB.Sheets(i).Name = shtName Then
-                shtFound = True
-            End If
+        For Each ws In XLpicsWB.Sheets      ' does worksheet exist?
+            If ws.Name.Equals(shtName) Then shtFound = True
         Next
 
         If Not shtFound Then        ' create worksheet
@@ -73,6 +72,8 @@ Module ImportData
                 XLpicsWB.Worksheets.Add().Name = shtName
                 ws = XLpicsWB.Sheets(shtName)
             End If
+        Else
+            ws = XLpicsWB.Sheets(shtName)
 
         End If
 
@@ -99,34 +100,6 @@ Module ImportData
             XLProjectWB.Close(SaveChanges:=False)
 
         End If
-
-    End Sub
-
-    Sub Button_Clear_All_Sheets(ByRef wrkBook As Workbook)
-        '
-        'WARNING!!! This will clear all data AND delete all Wire sheets
-        If MsgBox("WARNING! This will clear all data from this workbook and delete existing Wire data sheets.", vbOKCancel) = vbCancel Then Exit Sub
-
-        Dim ws As Worksheet
-        wrkBook.Application.ScreenUpdating = False
-
-        Call Button_Unhide_All_Sheets(wrkBook)
-
-        Clear_All_Sheets()
-
-        Call Delete_Wire_Sheets(wrkBook, "Wire_AIn Template")
-        Call Delete_Wire_Sheets(wrkBook, "Wire_DIn Template")
-        Call Delete_Wire_Sheets(wrkBook, "Wire_ValveC Template")
-        Call Delete_Wire_Sheets(wrkBook, "Wire_ValveMO Template")
-        Call Delete_Wire_Sheets(wrkBook, "Wire_ValveSO Template")
-        Call Delete_Wire_Sheets(wrkBook, "Wire_Motor Template")
-        Call Delete_Wire_Sheets(wrkBook, "Wire_VSD Template")
-
-        Call Button_Hide_Sheets(wrkBook)
-        ws = wrkBook.Sheets("Instructions")
-        ws.Range("CPU_PREFIX").ClearContents()
-
-        wrkBook.Application.ScreenUpdating = True
 
     End Sub
 
@@ -164,7 +137,13 @@ Module ImportData
         response = MsgBox("Create A New PICS Config Builder file?", vbYesNo)
 
         If response = vbYes Then
-            fn = InputBox("Enter New PICS Config Builder File Name:", "New File Name", "PICS_Config_Builder")
+            Do
+                fn = InputBox("Enter New PICS Config Builder File Name:", "New File Name", "PICS_Config_Builder")
+                If fn = "" Then     ' Cancel button pressed
+                    response = MsgBox("Cancel Operation?", vbYesNo)
+                    If response = vbYes Then Exit Sub
+                End If
+            Loop Until Not IsBlank(fn)
             XLpicsFN = DirectoryName & "\" & fn & ".xlsx"
 
         Else
@@ -199,5 +178,24 @@ Module ImportData
         XLApp.Application.DisplayAlerts = False 'Turn safety alerts OFF
 
     End Sub
+
+    Function IsBlank(ByVal Value)
+
+        'returns True if Empty or NULL
+        If VarType(Value) = vbEmpty Or VarType(Value) = vbNull Then
+            Return True
+        ElseIf VarType(Value) = vbString Then
+            If Value = "" Then
+                Return True
+            End If
+        ElseIf VarType(Value) = vbObject Then
+            If Value Is Nothing Then
+                Return True
+            End If
+        End If
+
+        Return False
+
+    End Function
 
 End Module

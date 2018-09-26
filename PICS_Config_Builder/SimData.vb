@@ -6,72 +6,28 @@ Module SimData
     Sub Generate_Sim_Data()
 
         Dim ws As Worksheet = XLpicsWB.Sheets("IO Sheets")
+        Dim sheetCount As Integer = XLpicsWB.Sheets.Count
 
-        If ws.FilterMode Then ws.ShowAllData()
-
-        Clear_Sheet_Type("SimData")
-        Clear_Sheet_Type("IOTags")
-        Clear_Sheet_Type("MinMax")
+        If sheetCount > 1 Then     ' skip procedure for new PICS workbook with only 1 sheet (IO Sheet)
+            Call Clear_Sheet_Type("SimData")
+            Call Clear_Sheet_Type("IOTags")
+            Call Clear_Sheet_Type("MinMax")
+        End If
 
         Call Make_Sim_Tags("IO Sheets", "SimData")
 
         Call CheckMinMaxData("MinMax - AIn")
 
-        Call Rem_Spaces("SimData", "E")
-        Call Rem_Spaces("IOTags - AIn", "E")
-        Call Rem_Spaces("IOTags - DIn", "E")
-        Call Rem_Spaces("IOTags - ValveMO", "E")
-        Call Rem_Spaces("IOTags - ValveSO", "E")
-        Call Rem_Spaces("IOTags - ValveC", "E")
-        Call Rem_Spaces("IOTags - Motor", "E")
-        Call Rem_Spaces("IOTags - VSD", "E")
+        If WS_Exists("SimData") Then Call Remove_Spaces("SimData", "E")
+        If WS_Exists("IOTags - AIn") Then Call Remove_Spaces("IOTags - AIn", "E")
+        If WS_Exists("IOTags - DIn") Then Call Remove_Spaces("IOTags - DIn", "E")
+        If WS_Exists("IOTags - ValveMO") Then Call Remove_Spaces("IOTags - ValveMO", "E")
+        If WS_Exists("IOTags - ValveSO") Then Call Remove_Spaces("IOTags - ValveSO", "E")
+        If WS_Exists("IOTags - ValveC") Then Call Remove_Spaces("IOTags - ValveC", "E")
+        If WS_Exists("IOTags - Motor") Then Call Remove_Spaces("IOTags - Motor", "E")
+        If WS_Exists("IOTags - VSD") Then Call Remove_Spaces("IOTags - VSD", "E")
 
-        Call SortByColumn("IOTags - ValveC", "E")
-
-        ws = XLpicsWB.Sheets("IOTags - AIn")
-        ws.Range("A2").Select()
-
-        ws = XLpicsWB.Sheets("IOTags - DIn")
-        ws.Range("A2").Select()
-
-        ws = XLpicsWB.Sheets("SimData")
-        ws.Range("A8").Select()
-
-        ws = XLpicsWB.Sheets("Instructions")
-
-    End Sub
-
-    Sub Button_Hide_Sheets(ByRef wrkBook As Workbook)
-
-        wrkBook.Application.ScreenUpdating = False
-
-        Hide_Sheets(wrkBook)
-
-        wrkBook.Application.ScreenUpdating = True
-
-    End Sub
-
-    Sub Button_Unhide_All_Sheets(ByRef wrkBook As Workbook)
-
-        wrkBook.Application.ScreenUpdating = False
-
-        Unhide_All_Sheets(wrkBook)
-
-        wrkBook.Application.ScreenUpdating = True
-
-    End Sub
-
-    Sub ShowStatusBar(ByRef wrkBook As Workbook, Message As String)
-        '
-        '
-        wrkBook.Application.StatusBar = Message
-        wrkBook.Application.OnTime(Now() + TimeSerial(0, 0, 5), "hideStatusBar")
-
-    End Sub
-    Sub HideStatusBar(ByRef wrkBook As Workbook)
-        '
-        '
-        wrkBook.Application.StatusBar = False
+        If WS_Exists("IOTags - ValveC") Then Call SortByColumn("IOTags - ValveC", "E")
 
     End Sub
 
@@ -80,7 +36,7 @@ Module SimData
         Dim SimName, SimType, SimDefVal, SimIOAddr, SimDesc As String
         Dim Prefix, PLCBaseTag, DataType, IOVariable, IOAddress, IOType, DesignTag, Description As String
         Dim IOPrefix, MinMaxPrefix As String
-        Dim InputMin, InputMax, OutputMin, OutputMax As Integer
+        Dim RowCount, InputMin, InputMax, OutputMin, OutputMax As Integer
 
         Prefix = ImportData.CPU_Name
         IOPrefix = "IOTags - "
@@ -88,7 +44,7 @@ Module SimData
 
         'Source data is in sourceSheet, DataSheet is the destination
         Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
-        Dim SourceRowCount As Integer = ws.Range("A").End(XlDirection.xlUp).Row
+        Dim SourceRowCount As Integer = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
         Dim PLCBaseTag_Col As Integer = Find_Header_Column(sourceSheet, "PLCBaseTag")
         Dim DataType_Col As Integer = Find_Header_Column(sourceSheet, "Data Type")
         Dim IOVariable_Col As Integer = Find_Header_Column(sourceSheet, "Variable")
@@ -103,27 +59,25 @@ Module SimData
 
         For i = 2 To SourceRowCount
 
-            PLCBaseTag = CType(ws.Range(i, PLCBaseTag_Col).Value, String)
-            DataType = CType(ws.Range(i, DataType_Col).Value, String)
-            IOVariable = CType(ws.Range(i, IOVariable_Col).Value, String)
-            IOAddress = CType(ws.Range(i, IOAddress_Col).Value, String)
-            IOType = CType(ws.Range(i, IOType_Col).Value, String)
-            DesignTag = CType(ws.Range(i, DesignTag_Col).Value, String)
-            Description = CType(ws.Range(i, Description_Col).Value, String)
-            InputMin = CType(ws.Range(i, InputMin_Col).Value, Integer)
-            InputMax = CType(ws.Range(i, InputMax_Col).Value, Integer)
-            OutputMin = CType(ws.Range(i, OutputMin_Col).Value, Integer)
-            OutputMax = CType(ws.Range(i, OutputMax_Col).Value, Integer)
+            PLCBaseTag = ws.Cells(i, PLCBaseTag_Col).Value
+            DataType = ws.Cells(i, DataType_Col).Value
+            IOVariable = ws.Cells(i, IOVariable_Col).Value
+            IOAddress = ws.Cells(i, IOAddress_Col).Value
+            IOType = ws.Cells(i, IOType_Col).Value
+            DesignTag = ws.Cells(i, DesignTag_Col).Value
+            Description = ws.Cells(i, Description_Col).Value
+            InputMin = ws.Cells(i, InputMin_Col).Value
+            InputMax = ws.Cells(i, InputMax_Col).Value
+            OutputMin = ws.Cells(i, OutputMin_Col).Value
+            OutputMax = ws.Cells(i, OutputMax_Col).Value
 
             ' Since these are all the same in PICS functionally, make them all AIn
             DataType = Replace(DataType, "AInAdv", "AIn")
             DataType = Replace(DataType, "AInHART", "AIn")
 
             'Ignores spares, and types that have no use here
-            If UCase(DesignTag) <> "SPARE" And
-            UCase(DataType) <> "SPARE" And
-            UCase(PLCBaseTag) <> "SPARE" And
-            UCase(PLCBaseTag) <> "" Then
+            If UCase(DesignTag) <> "SPARE" And UCase(DataType) <> "SPARE" And
+            UCase(PLCBaseTag) <> "SPARE" And UCase(PLCBaseTag) <> "" Then
 
                 ' Strip of the P_ or PC_ to get the 'base' type
                 ' There should be a corresponding sheet
@@ -147,9 +101,12 @@ Module SimData
                     SimDesc = Description
 
                     ' Write data to IO tag sheet
-                    ws = XLpicsWB.Sheets(DataSheet)
-                    Dim RowCount As Integer = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(DataSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(DataSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -157,9 +114,12 @@ Module SimData
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ' Write data to IO tag sheet
-                    ws = XLpicsWB.Sheets(stripSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(stripSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(stripSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -172,8 +132,7 @@ Module SimData
                     SimDesc = Description & " CH_FLT"
 
                     ws = XLpicsWB.Sheets(DataSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -182,8 +141,7 @@ Module SimData
 
                     ' Write channel fault item to IO tag sheet
                     ws = XLpicsWB.Sheets(stripSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").EndxlUp.Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -198,18 +156,24 @@ Module SimData
                     SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
                     SimDesc = Description
 
-                    ws = XLpicsWB.Sheets(DataSheet)
-                    Dim RowCount As Integer = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(DataSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(DataSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
                     ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    ws = XLpicsWB.Sheets(stripSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(stripSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(stripSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -224,9 +188,12 @@ Module SimData
                     SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
                     SimDesc = Description
 
-                    ws = XLpicsWB.Sheets(DataSheet)
-                    Dim RowCount As Integer = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(DataSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(DataSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -234,18 +201,24 @@ Module SimData
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ' Write data to IO tag sheets
-                    ws = XLpicsWB.Sheets(stripSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(stripSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(stripSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
                     ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    ws = XLpicsWB.Sheets(stripMinMax)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(stripMinMax) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(stripMinMax)
+                    End If
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = InputMin
                     ws.Range("C" & RowCount + 1).Cells.Value = InputMax
@@ -266,8 +239,7 @@ Module SimData
                     SimDesc = Description & " CH_FLT"
 
                     ws = XLpicsWB.Sheets(DataSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -276,8 +248,7 @@ Module SimData
 
                     ' Add faults to IO tag sheet
                     ws = XLpicsWB.Sheets(stripSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -285,8 +256,7 @@ Module SimData
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ws = XLpicsWB.Sheets(stripMinMax)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = InputMin
                     ws.Range("C" & RowCount + 1).Cells.Value = InputMax
@@ -301,9 +271,12 @@ Module SimData
                     SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
                     SimDesc = Description
 
-                    ws = XLpicsWB.Sheets(DataSheet)
-                    Dim RowCount As Integer = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(DataSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(DataSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -311,18 +284,24 @@ Module SimData
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ' Write data to IO tag sheet
-                    ws = XLpicsWB.Sheets(stripSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(stripSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(stripSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
                     ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    ws = XLpicsWB.Sheets(stripMinMax)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(stripMinMax) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(stripMinMax)
+                    End If
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = InputMin
                     ws.Range("C" & RowCount + 1).Cells.Value = InputMax
@@ -337,9 +316,12 @@ Module SimData
                     SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
                     SimDesc = Description
 
-                    ws = XLpicsWB.Sheets(DataSheet)
-                    Dim RowCount As Integer = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(DataSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(DataSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -347,18 +329,24 @@ Module SimData
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     'Write data to IO tag sheet
-                    ws = XLpicsWB.Sheets(stripSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(stripSheet) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(stripSheet)
+                    End If
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
                     ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
-                    ws = XLpicsWB.Sheets(stripMinMax)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    If SourceRowCount = 2 Then
+                        ws = SelectWS(stripMinMax) ' Check if worksheet exists or create
+                    Else
+                        ws = XLpicsWB.Sheets(stripMinMax)
+                    End If
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = InputMin
                     ws.Range("C" & RowCount + 1).Cells.Value = InputMax
@@ -372,8 +360,7 @@ Module SimData
                     SimDesc = Description & " CH_FLT"
 
                     ws = XLpicsWB.Sheets(DataSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -381,8 +368,7 @@ Module SimData
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ws = XLpicsWB.Sheets(stripSheet)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = SimType
                     ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
@@ -390,28 +376,28 @@ Module SimData
                     ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
 
                     ws = XLpicsWB.Sheets(stripMinMax)
-                    RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                    ws.Range("A" & RowCount + 1).Select()
+                    RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
                     ws.Range("A" & RowCount + 1).Cells.Value = SimName
                     ws.Range("B" & RowCount + 1).Cells.Value = InputMin
                     ws.Range("C" & RowCount + 1).Cells.Value = InputMax
                     ws.Range("D" & RowCount + 1).Cells.Value = OutputMin
                     ws.Range("E" & RowCount + 1).Cells.Value = OutputMax
-
                 End If
+
             End If
-        Next i
+        Next
 
     End Sub
-    Sub CheckMinMaxData(minMaxSheet As String)
+
+    Sub CheckMinMaxData(ByVal minMaxSheet As String)
         '
         '   Checks to make sure the Min Max data is numeric.
-        Dim ws As Worksheet = XLpicsWB.Sheets("minMaxSheet").Select
-        Dim RowCount As Integer = ws.Cells(ws.Rows.Count, "A").End.xlUp.Row
+        Dim ws As Worksheet = XLpicsWB.Sheets(minMaxSheet)
+        Dim RowCount As Integer = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
 
         For i = 2 To RowCount
-            If Not IsNumeric(XLpicsWB.Sheets("minMaxSheet").Range("B" & i).Cells.Value) Then
-                ws = XLpicsWB.Sheets("IO Sheets").Select
+            If Not IsNumeric(XLpicsWB.Sheets(minMaxSheet).Range("B" & i).Cells.Value) Then
+                ws = XLpicsWB.Sheets("IO Sheets")
                 ws.Columns("L").Select
                 MsgBox("InputMin must be numeric values.")
                 Exit For
@@ -420,7 +406,7 @@ Module SimData
 
         For i = 2 To RowCount
             If Not IsNumeric(XLpicsWB.Sheets(minMaxSheet).Range("C" & i).Cells.Value) Then
-                ws = XLpicsWB.Sheets("IO Sheets").Select
+                ws = XLpicsWB.Sheets("IO Sheets")
                 ws.Columns("M").Select
                 MsgBox("InputMax must be numeric values.")
                 Exit For
@@ -429,7 +415,7 @@ Module SimData
 
         For i = 2 To RowCount
             If Not IsNumeric(XLpicsWB.Sheets(minMaxSheet).Range("D" & i).Cells.Value) Then
-                ws = XLpicsWB.Sheets("IO Sheets").Select
+                ws = XLpicsWB.Sheets("IO Sheets")
                 ws.Columns("N").Select
                 MsgBox("OutputMin must be numeric values.")
                 Exit For
@@ -438,12 +424,22 @@ Module SimData
 
         For i = 2 To RowCount
             If Not IsNumeric(XLpicsWB.Sheets(minMaxSheet).Range("E" & i).Cells.Value) Then
-                ws = XLpicsWB.Sheets("IO Sheets").Select
+                ws = XLpicsWB.Sheets("IO Sheets")
                 ws.Columns("O").Select
                 MsgBox("OutputMax must be numeric values.")
                 Exit For
             End If
         Next i
+
+    End Sub
+
+    Sub Button_Hide_Sheets(ByRef wrkBook As Workbook)
+
+        wrkBook.Application.ScreenUpdating = False
+
+        Hide_Sheets(wrkBook)
+
+        wrkBook.Application.ScreenUpdating = True
 
     End Sub
 
@@ -465,18 +461,14 @@ Module SimData
         End If
 
     End Function
-    Sub Rem_Spaces(ByRef destSheet As String, ByRef DestCol As String)
-        '
-        Dim ws As Worksheet = XLpicsWB.Sheets(destSheet).Select
 
-        ws.Columns(DestCol).Replace(What:="  ",
-                        Replacement:=" ",
-                        LookAt:=XlLookAt.xlPart,
-                        SearchOrder:=XlSearchOrder.xlByRows,
-                        MatchCase:=False,
-                        SearchFormat:=False,
+    Sub Remove_Spaces(ByRef destSheet As String, ByRef DestCol As String)
+        '
+        Dim ws As Worksheet = XLpicsWB.Sheets(destSheet)
+
+        ws.Columns(DestCol).Replace(What:="  ", Replacement:=" ", LookAt:=XlLookAt.xlPart,
+                        SearchOrder:=XlSearchOrder.xlByRows, MatchCase:=False, SearchFormat:=False,
                         ReplaceFormat:=False)
-        ws.Range("A1").Select()
 
     End Sub
 
@@ -503,11 +495,42 @@ Module SimData
     Sub SortByColumn(ByRef sheetName As String, ByRef SortCol As String)
         '
         '
-        Dim ws As Worksheet = XLpicsWB.Sheets(sheetName).Select
+        Dim ws As Worksheet = XLpicsWB.Sheets(sheetName)
         Dim RowCount As Integer = ws.Cells(ws.Rows.Count, "D").End(XlDirection.xlUp).Row
 
         ws.Range("A2:E" & RowCount).Sort(Key1:=ws.Range(SortCol & 2), Order1:=XlSortOrder.xlAscending)
 
     End Sub
+
+    Function SelectWS(ByVal sheet As String) As Worksheet
+        ' 
+        Dim shtFound As Boolean = False
+        Dim ws As Worksheet
+
+        For Each ws In XLpicsWB.Sheets      ' does worksheet exist?
+            If ws.Name.Equals(sheet) Then shtFound = True
+        Next
+
+        If shtFound Then        ' was worksheet found?
+            Return XLpicsWB.Sheets(sheet)
+        Else
+            XLpicsWB.Worksheets.Add().Name = sheet
+            Return XLpicsWB.Sheets(sheet)
+        End If
+
+    End Function
+
+    Function WS_Exists(ByVal sheet As String) As Boolean
+        ' 
+        Dim shtFound As Boolean = False
+        Dim ws As Worksheet
+
+        For Each ws In XLpicsWB.Sheets      ' does worksheet exist?
+            If ws.Name.Equals(sheet) Then shtFound = True
+        Next
+
+        Return shtFound
+
+    End Function
 
 End Module
