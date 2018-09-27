@@ -97,6 +97,7 @@
     <Import Include="VBScript_RegExp_55" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="cPICSdB.vb" />
     <Compile Include="Form1.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -124,10 +125,12 @@
     <Compile Include="SimData.vb" />
     <Compile Include="Utilities.vb" />
     <Compile Include="WireData.vb" />
+    <Compile Include="wsTemplates.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.vb</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="My Project\Resources.resx">
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>

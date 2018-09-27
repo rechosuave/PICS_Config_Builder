@@ -27,11 +27,12 @@ Module ImportData
             Exit Sub
         End If
 
-        Call Import_Data()
+        Call Build_PICS_WB()    ' Validate or add required formatted blank worksheets to PICS file
+        'Call Import_Data()      ' Import "IO Sheets" worksheet from Project file to "IO Sheets" in PICS file
 
-        Call Generate_Sim_Data()
-        Call Generate_Memory_Data()
-        Call Generate_Wire_Data()
+        'Call Generate_Sim_Data()    ' Build OPC tags
+        'Call Generate_Memory_Data() ' Build Global tags
+        'Call Generate_Wire_Data()   ' Build Wire data files for PICS simulator
 
         'Dim outFolder As String
         'outFolder = Create_Output_Folder(XLpicsWB)
@@ -53,7 +54,7 @@ Module ImportData
 
     Sub Import_Data()
 
-        'Populate Excel PICS Config file with data from Project file
+        'Populate Excel PICS Config file with data from Project file "IO Sheets" worksheet
         Dim shtName As String = "IO Sheets"
         Dim shtFound As Boolean = False
         Dim ws As Worksheet
