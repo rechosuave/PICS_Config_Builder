@@ -21,14 +21,14 @@ Module ImportData
             Exit Sub
         End If
 
-        Call OpenXLpicsFN()     ' Create or update the Excel PICS Config file that will organize data
+        Call OpenXLpicsFN()     ' Open or Create the Excel PICS Config Builder file that is used to organize data
 
-        If XLpicsWB Is Nothing Then 'No PICS Config file selected
+        If XLpicsWB Is Nothing Then 'No PICS Config Builder file selected
             Exit Sub
         End If
 
-        Call Build_PICS_WB()    ' Validate or add required formatted blank worksheets to PICS file
-        'Call Import_Data()      ' Import "IO Sheets" worksheet from Project file to "IO Sheets" in PICS file
+        Call Validate_PICS_WB()    ' Validate or add required worksheets to PICS config builder file
+        Call Import_Data()         ' Import "IO Sheets" worksheet from Project file into "IO Sheets" in PICS file
 
         'Call Generate_Sim_Data()    ' Build OPC tags
         'Call Generate_Memory_Data() ' Build Global tags
@@ -42,7 +42,12 @@ Module ImportData
         'Call Export_Wire_Data(XLpicsWB, outFolder)
 
         If XLpicsWB.Name.Contains(".xlsm") Then     'Re-enable Excel application macros security settings prior to closing file
+            Dim ws As Worksheet = XLpicsWB.Sheets(2)
+            ws.Activate()
             XLpicsWB.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
+        Else
+            Dim ws As Worksheet = XLpicsWB.Sheets(1)
+            ws.Activate()
         End If
 
         XLpicsWB.Application.ScreenUpdating = True
@@ -56,36 +61,17 @@ Module ImportData
 
         'Populate Excel PICS Config file with data from Project file "IO Sheets" worksheet
         Dim shtName As String = "IO Sheets"
-        Dim shtFound As Boolean = False
-        Dim ws As Worksheet
-        Dim shtCount As Integer = XLpicsWB.Sheets.Count
-
-        For Each ws In XLpicsWB.Sheets      ' does worksheet exist?
-            If ws.Name.Equals(shtName) Then shtFound = True
-        Next
-
-        If Not shtFound Then        ' create worksheet
-            If shtCount = 1 Then        ' rename sheet 1
-                XLpicsWB.Sheets(shtCount).Name = shtName
-                ws = XLpicsWB.Sheets(shtName)
-                ws.Range("A2:AA9999").Clear()
-            Else
-                XLpicsWB.Worksheets.Add().Name = shtName
-                ws = XLpicsWB.Sheets(shtName)
-            End If
-        Else
-            ws = XLpicsWB.Sheets(shtName)
-
-        End If
+        Dim picsCellVal As String = "PLCBaseTag"
+        Dim ws As Worksheet = XLpicsWB.Sheets(shtName)
 
         picsBuilder = XLpicsWB.Name
         projectBuilder = XLProjectWB.Name
 
         CPU_Name = XLProjectWB.Sheets("Instructions").Range("C3").Value
-        Dim values = XLProjectWB.Sheets("IO Sheets").UsedRange.Copy        ' copy from Project worksheet and paste to new PICS worksheet
-        ws.Range("A1").PasteSpecial(XlPasteType.xlPasteValues)
+        XLProjectWB.Sheets(shtName).UsedRange.Copy          ' copy from Project worksheet to clipboard
+        ws.Range("A1").PasteSpecial(XlPasteType.xlPasteValues)  ' paste from clipboard to PICS worksheet
 
-        Do While ws.Range("A1").Value <> "PLCBaseTag"   ' Remove white space from top row
+        Do While ws.Range("A1").Value <> picsCellVal   ' Remove white space from top row
             ws.Range("A1").EntireRow.Delete()
         Loop
 
@@ -94,7 +80,7 @@ Module ImportData
             Form1.CPU_PREFIX.Text = CPU_Name
         End If
 
-        If XLProjectWB.Name.Contains(".xlsm") Then  'Re-enable Excel application macros security settings prior to closing Project file
+        If XLProjectWB.Name.Contains(".xlsm") Then  'Re-enable workbook macros security settings prior to closing Project file
             XLProjectWB.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
             XLProjectWB.Close(SaveChanges:=False)
         Else
@@ -130,7 +116,7 @@ Module ImportData
 
     Sub OpenXLpicsFN()
 
-        'Select or create PICS Excel file that will be used to create PICS simulation files
+        'Select or create PICS Excel file(workbook) that will be used to create PICS simulation files
         Dim title = "Open - Select PICS Config File"
         Dim response As MsgBoxResult
         Dim fn, XLpicsFN As String
@@ -153,13 +139,13 @@ Module ImportData
             If response = vbYes Then
                 XLpicsFN = XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title)
             Else
-                XLApp.Quit()  ' Since no PICS file was selected or created - close Excel and exit sub
+                XLApp.Quit()  ' Since no PICS file was selected or created - close Excel app and exit to main screen form
                 Exit Sub
             End If
 
         End If
 
-        If IO.File.Exists(XLpicsFN) Then     'open existing workbook for PICS Config File
+        If IO.File.Exists(XLpicsFN) Then     'open existing PICS Config File
             If XLpicsFN.Contains(".xlsm") Then  'Disable Excel application macros prior to opening file
                 XLApp.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
             End If
@@ -182,7 +168,7 @@ Module ImportData
 
     Function IsBlank(ByVal Value)
 
-        'returns True if Empty or NULL
+        ' Check for required user response - returns True if Empty or NULL
         If VarType(Value) = vbEmpty Or VarType(Value) = vbNull Then
             Return True
         ElseIf VarType(Value) = vbString Then

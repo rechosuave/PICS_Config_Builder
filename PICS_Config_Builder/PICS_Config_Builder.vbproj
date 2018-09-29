@@ -125,7 +125,7 @@
     <Compile Include="SimData.vb" />
     <Compile Include="Utilities.vb" />
     <Compile Include="WireData.vb" />
-    <Compile Include="wsTemplates.vb" />
+    <Compile Include="Templates.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form1.resx">
