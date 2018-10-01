@@ -2,8 +2,10 @@
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
 
+
 Module Templates
 
+    Public XLTemplateWB As Workbook
     Sub Validate_PICS_WB()
 
         If Not IsValid_WB() Then
@@ -32,6 +34,7 @@ Module Templates
             Call Build_MinMax_ValveC_WS()
             Call Build_MinMax_VSD_WS()
 
+            Call Build_Wire_WS()
             'Call Build_Wire_AIn_WS()
             'Call Build_Wire_DIn_WS()
             'Call Build_Wire_Motor_WS()
@@ -847,38 +850,84 @@ Module Templates
 
     End Sub
 
-    Sub Build_Wire_AIn_WS()
+    Sub Build_Wire_WS()
 
-        Dim shtName As String = "Wire_AIn Template"
-        Dim ColName() As String = {"Name", "InputMin", "InputMax", "OutputMin", "OutputMax"}
-        Dim tabColor As Integer = RGB(0, 51, 102)
-        Dim shtFound As Boolean = False
-        Dim letter As Char
-        Dim ws As Worksheet
-        Dim shtCount As Integer = XLpicsWB.Sheets.Count
+        Call OpenXLTemplateFN()
 
-        For Each ws In XLpicsWB.Sheets      ' does worksheet exist?
-            If ws.Name.Equals(shtName) Then
-                shtFound = True
-                Exit For
-            End If
-        Next
-
-        If Not shtFound Then        ' create worksheet
-            ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
-            ws.Name = shtName
-        Else
-            Exit Sub  'worksheet already exits - nothing to do
+        If XLTemplateWB Is Nothing Then ' wire template file not selected
+            Exit Sub
         End If
 
-        For i = 0 To ColName.Count - 1
-            letter = Convert.ToChar(65 + i)  ' starting pt is letter "A"
-            ws.Range(letter & "1").Value = ColName(i) ' assign value to cells A1, B1,..
-        Next
-        With ws.Tab
-            .Color = tabColor
-            .TintAndShade = 0
-        End With
+        Dim count As Integer = XLpicsWB.Sheets.Count
+
+        For Each Sheet In XLTemplateWB.Sheets
+            Sheet.Copy(After:=XLpicsWB.Sheets(count))
+
+        Next Sheet
+
+        XLTemplateWB.Application.ScreenUpdating = True
+        XLTemplateWB.Application.DisplayAlerts = True 'Turn safety alerts back On
+        XLTemplateWB.Close(SaveChanges:=False)
+
+    End Sub
+    Sub Build_Wire_AIn_WS()
+
+
+        ' import template from Excel workbook
+
+        'Dim shtName As String = "Wire_AIn Template"
+        'Dim ColName() As String = {"Name", "InputMin", "InputMax", "OutputMin", "OutputMax"}
+        'Dim tabColor As Integer = RGB(0, 51, 102)
+        'Dim shtFound As Boolean = False
+        'Dim letter As Char
+        'Dim ws As Worksheet
+        'Dim shtCount As Integer = XLpicsWB.Sheets.Count
+
+        'For Each ws In XLpicsWB.Sheets      ' does worksheet exist?
+        '    If ws.Name.Equals(shtName) Then
+        '        shtFound = True
+        '        Exit For
+        '    End If
+        'Next
+
+        'If Not shtFound Then        ' create worksheet
+        '    ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
+        '    ws.Name = shtName
+        'Else
+        '    Exit Sub  'worksheet already exits - nothing to do
+        'End If
+
+        'For i = 0 To ColName.Count - 1
+        '    letter = Convert.ToChar(65 + i)  ' starting pt is letter "A"
+        '    ws.Range(letter & "1").Value = ColName(i) ' assign value to cells A1, B1,..
+        'Next
+        'With ws.Tab
+        '    .Color = tabColor
+        '    .TintAndShade = 0
+        'End With
+
+    End Sub
+
+    Sub OpenXLTemplateFN()
+
+        ' Open the Excel Template file (workbook) for Wire file generation
+
+        Dim title = "Open - Select the Excel Template for Wire files"
+        Dim filter = "Excel Files (*.xltx),*.xltx"
+        Dim fn As String
+        Dim response As MsgBoxResult
+
+        MsgBox("Select Excel Wire Template file: " & Chr(34) & " PICS_Wire_Template.xltx" & Chr(34), vbOKOnly)
+
+        Do
+            fn = XLApp.GetOpenFilename(FileFilter:=filter, FilterIndex:=2, Title:=title)
+            If IsNothing(fn) Then     ' Cancel button pressed
+                response = MsgBox("Cancel Operation?", vbYesNo)
+                If response = vbYes Then Exit Sub
+            End If
+        Loop Until Not IsNothing(fn)
+
+        XLTemplateWB = XLApp.Workbooks.Open(fn)
 
     End Sub
 

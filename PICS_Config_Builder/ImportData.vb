@@ -28,18 +28,33 @@ Module ImportData
         End If
 
         Call Validate_PICS_WB()    ' Validate or add required worksheets to PICS config builder file
-        Call Import_Data()         ' Import "IO Sheets" worksheet from Project file into "IO Sheets" in PICS file
 
-        'Call Generate_Sim_Data()    ' Build OPC tags
-        'Call Generate_Memory_Data() ' Build Global tags
-        'Call Generate_Wire_Data()   ' Build Wire data files for PICS simulator
+        If Not IsNothing(XLTemplateWB) Then ' no wire template file selected
 
-        'Dim outFolder As String
-        'outFolder = Create_Output_Folder(XLpicsWB)
+            Call Import_Data()         ' Import "IO Sheets" worksheet from Project file into "IO Sheets" in PICS file
 
-        'Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
-        'Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
-        'Call Export_Wire_Data(XLpicsWB, outFolder)
+            'Call Generate_Sim_Data()    ' Build OPC tags
+            'Call Generate_Memory_Data() ' Build Global tags
+            'Call Generate_Wire_Data()   ' Build Wire data files for PICS simulator
+
+            'Dim outFolder As String
+            'outFolder = Create_Output_Folder(XLpicsWB)
+
+            'Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
+            'Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
+            'Call Export_Wire_Data(XLpicsWB, outFolder)
+
+        End If
+
+        If IsReference(XLProjectWB) Then        ' is the project file workbook still open
+            If XLProjectWB.Name.Contains(".xlsm") Then  'Re-enable workbook macros security settings prior to closing Project file
+                XLProjectWB.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
+                XLProjectWB.Close(SaveChanges:=False)
+            Else
+                XLProjectWB.Close(SaveChanges:=False)
+
+            End If
+        End If
 
         If XLpicsWB.Name.Contains(".xlsm") Then     'Re-enable Excel application macros security settings prior to closing file
             Dim ws As Worksheet = XLpicsWB.Sheets(2)
@@ -50,9 +65,8 @@ Module ImportData
             ws.Activate()
         End If
 
-        XLpicsWB.Application.ScreenUpdating = True
-        XLpicsWB.Application.DisplayAlerts = True 'Turn safety alerts back On
         XLpicsWB.Close()
+
         XLApp.Quit()
 
     End Sub
@@ -93,24 +107,24 @@ Module ImportData
     Sub OpenXLProjectFN()
 
         'Select and open the Excel project file (PLC IO Mapping) that will be used to create PICS simulation files
-        Dim sFileN As String
+        Dim fn As String
         Dim title = "Open - Select Project Config File"
 
-        sFileN = XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title)
-        DirectoryName = IO.Path.GetDirectoryName(sFileN)
+        fn = XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title)
+        If fn Is Nothing Or fn = "False" Then 'operator cancelled operation to open the project file
+            XLApp.Quit()
+            Exit Sub
+        End If
+
+        DirectoryName = IO.Path.GetDirectoryName(fn)
         XLApp.DefaultFilePath = DirectoryName
         FileIO.FileSystem.CurrentDirectory = DirectoryName     ' set directory path
 
-        If sFileN Is Nothing Then 'operator cancelled operation to open the project file
-            XLApp.Quit()
-        End If
-
-
-        If sFileN.Contains(".xlsm") Then    'Disable Excel application macros security settings when opening file
+        If fn.Contains(".xlsm") Then    'Disable Excel application macros security settings when opening file
             XLApp.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
         End If
 
-        XLProjectWB = XLApp.Workbooks.Open(Filename:=sFileN, ReadOnly:=True)
+        XLProjectWB = XLApp.Workbooks.Open(Filename:=fn, ReadOnly:=True)
 
     End Sub
 
@@ -130,7 +144,7 @@ Module ImportData
                     response = MsgBox("Cancel Operation?", vbYesNo)
                     If response = vbYes Then Exit Sub
                 End If
-            Loop Until Not IsBlank(fn)
+            Loop Until Not IsNothing(fn)
             XLpicsFN = DirectoryName & "\" & fn & ".xlsx"
 
         Else
@@ -166,17 +180,17 @@ Module ImportData
 
     End Sub
 
-    Function IsBlank(ByVal Value)
+    Function IsNothing(ByRef objValue) As Boolean
 
         ' Check for required user response - returns True if Empty or NULL
-        If VarType(Value) = vbEmpty Or VarType(Value) = vbNull Then
+        If VarType(objValue) = vbEmpty Or VarType(objValue) = vbNull Then
             Return True
-        ElseIf VarType(Value) = vbString Then
-            If Value = "" Then
+        ElseIf VarType(objValue) = vbString Then
+            If objValue = "" Or objValue = "False" Then
                 Return True
             End If
-        ElseIf VarType(Value) = vbObject Then
-            If Value Is Nothing Then
+        ElseIf VarType(objValue) = vbObject Then
+            If objValue Is Nothing Then
                 Return True
             End If
         End If

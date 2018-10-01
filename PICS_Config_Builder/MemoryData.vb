@@ -6,25 +6,25 @@ Module MemoryData
 
     Sub Generate_Memory_Data()
 
-        If WS_Exists("MemoryData") Then Call Clear_Sheet_Type("MemoryData")
-        If WS_Exists("IOMem") Then Call Clear_Sheet_Type("IOMem")
+        Call Clear_Sheet_Type("MemoryData")
+        Call Clear_Sheet_Type("IOMem")
 
-        If WS_Exists("IOTags - AIn") Then Call Generate_AI_Memory("IOTags - AIn", "IOMem - AIn")
-        If WS_Exists("IOTags - DIn") Then Call Generate_DI_Memory("IOTags - DIn", "IOMem - DIn")
-        If WS_Exists("IOTags - ValveC") Then Call Generate_ValvesC_Memory("IOTags - ValveC", "IOMem - ValveC")
-        If WS_Exists("IOTags - ValveMO") Then Call Generate_ValvesMO_Memory("IOTags - ValveMO", "IOMem - ValveMO")
-        If WS_Exists("IOTags - Motor") Then Call Generate_Motor_Memory("IOTags - Motor", "IOMem - Motor")
-        If WS_Exists("IOTags - VSD") Then Call Generate_VSD_Memory("IOTags - VSD", "IOMem - VSD")
+        Call Generate_AI_Memory("IOTags - AIn", "IOMem - AIn")
+        Call Generate_DI_Memory("IOTags - DIn", "IOMem - DIn")
+        Call Generate_ValvesC_Memory("IOTags - ValveC", "IOMem - ValveC")
+        Call Generate_ValvesMO_Memory("IOTags - ValveMO", "IOMem - ValveMO")
+        Call Generate_Motor_Memory("IOTags - Motor", "IOMem - Motor")
+        Call Generate_VSD_Memory("IOTags - VSD", "IOMem - VSD")
 
-        Call Remove_From_Descriptions()
+        'Call Remove_From_Descriptions()        'this procedure requires a sheet "Instructions" that is no longer used
 
-        If WS_Exists("IOMem - AIn") Then Call Remove_Spaces("IOMem - AIn", "F")
-        If WS_Exists("IOMem - DIn") Then Call Remove_Spaces("IOMem - DIn", "F")
-        If WS_Exists("IOMem - ValveC") Then Call Remove_Spaces("IOMem - ValveC", "F")
-        If WS_Exists("IOMem - ValveMO") Then Call Remove_Spaces("IOMem - ValveMO", "F")
-        If WS_Exists("IOMem - ValveSO") Then Call Remove_Spaces("IOMem - ValveSO", "F")
-        If WS_Exists("IOMem - Motor") Then Call Remove_Spaces("IOMem - Motor", "F")
-        If WS_Exists("IOMem - VSD") Then Call Remove_Spaces("IOMem - VSD", "F")
+        Call Remove_Spaces("IOMem - AIn", "F")
+        Call Remove_Spaces("IOMem - DIn", "F")
+        Call Remove_Spaces("IOMem - ValveC", "F")
+        Call Remove_Spaces("IOMem - ValveMO", "F")
+        Call Remove_Spaces("IOMem - ValveSO", "F")
+        Call Remove_Spaces("IOMem - Motor", "F")
+        Call Remove_Spaces("IOMem - VSD", "F")
 
         Call Copy_Memory_Data()
 
@@ -36,12 +36,7 @@ Module MemoryData
         Dim ws As Worksheet
         Dim RowCount As Integer
 
-        If WS_Exists(destSheet) Then    ' Does worksheet exist 
-            ws = XLpicsWB.Sheets(destSheet)
-        Else    ' create new worksheet
-            ws = XLpicsWB.Sheets.Add(,,, XlSheetType.xlWorksheet)
-            ws.Name = destSheet
-        End If
+        ws = XLpicsWB.Sheets(destSheet)
 
         RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
         ws.Range("A" & RowCount + 1).Select()
@@ -57,11 +52,7 @@ Module MemoryData
     Sub Generate_AI_Memory(ByVal sourceSheet As String, ByVal destSheet As String)
         '
         '   Generate AI Memory
-        Dim IO_Number As String
-        Dim IO_Name As String
-        Dim IO_Type As String
-        Dim IO_Val As String
-        Dim IO_Desc As String
+        Dim IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc As String
         Dim SourceRowCount As Integer
         Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
 
@@ -94,16 +85,12 @@ Module MemoryData
         Next
 
     End Sub
-    Sub Generate_DI_Memory(ByRef sourceSheet As String, ByRef destSheet As String)
-        '
+    Sub Generate_DI_Memory(ByVal sourceSheet As String, ByVal destSheet As String)
+
         '   Generate DI Memory
-        Dim IO_Number As String
-        Dim IO_Name As String
-        Dim IO_Type As String
-        Dim IO_Val As String
-        Dim IO_Desc As String
+        Dim IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc As String
         Dim SourceRowCount As Integer
-        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet).Select
+        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
 
         SourceRowCount = ws.Cells(ws.Rows.Count, "A").End.xlUp.Row
 
@@ -129,17 +116,12 @@ Module MemoryData
         Next
 
     End Sub
-    Sub Generate_ValvesC_Memory(ByRef sourceSheet As String, ByRef destSheet As String)
-        '
-        '
+    Sub Generate_ValvesC_Memory(ByVal sourceSheet As String, ByVal destSheet As String)
+
         '   Generate ValvesC Memory
-        Dim IO_Number As String
-        Dim IO_Name As String
-        Dim IO_Type As String
-        Dim IO_Val As String
-        Dim IO_Desc As String
+        Dim IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc As String
         Dim SourceRowCount As Integer
-        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet).Select
+        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
 
         SourceRowCount = ws.Cells(ws.Rows.Count, "A").End.xlUp.Row
 
@@ -167,17 +149,13 @@ Module MemoryData
         Next
 
     End Sub
-    Sub Generate_ValvesMO_Memory(ByRef sourceSheet As String, ByRef destSheet As String)
+    Sub Generate_ValvesMO_Memory(ByVal sourceSheet As String, ByVal destSheet As String)
         '
         '
         '   Generate ValvesSO Memory
-        Dim IO_Number As String
-        Dim IO_Name As String
-        Dim IO_Type As String
-        Dim IO_Val As String
-        Dim IO_Desc As String
+        Dim IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc As String
         Dim SourceRowCount As Integer
-        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet).Select
+        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
 
         SourceRowCount = ws.Cells(ws.Rows.Count, "A").End.xlUp.Row
 
@@ -208,16 +186,12 @@ Module MemoryData
 
     End Sub
 
-    Sub Generate_ValvesSO_Memory(ByRef sourceSheet As String, ByRef destSheet As String)
+    Sub Generate_ValvesSO_Memory(ByVal sourceSheet As String, ByVal destSheet As String)
         '
         '   Generate ValvesSO Memory
-        Dim IO_Number As String
-        Dim IO_Name As String
-        Dim IO_Type As String
-        Dim IO_Val As String
-        Dim IO_Desc As String
+        Dim IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc As String
         Dim SourceRowCount As Integer
-        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet).Select
+        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
 
         SourceRowCount = ws.Cells(ws.Rows.Count, "A").End.xlUp.Row
 
@@ -247,16 +221,12 @@ Module MemoryData
 
     End Sub
 
-    Sub Generate_Motor_Memory(ByRef sourceSheet As String, ByRef destSheet As String)
+    Sub Generate_Motor_Memory(ByVal sourceSheet As String, ByVal destSheet As String)
         '
         '   Generate Motor Memory
-        Dim IO_Number As String
-        Dim IO_Name As String
-        Dim IO_Type As String
-        Dim IO_Val As String
-        Dim IO_Desc As String
+        Dim IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc As String
         Dim SourceRowCount As Integer
-        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet).Select
+        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
 
         SourceRowCount = ws.Cells(ws.Rows.Count, "A").End.xlUp.Row
 
@@ -285,16 +255,12 @@ Module MemoryData
         Next
 
     End Sub
-    Sub Generate_VSD_Memory(ByRef sourceSheet As String, ByRef destSheet As String)
+    Sub Generate_VSD_Memory(ByVal sourceSheet As String, ByVal destSheet As String)
         '
         '   Generate Motor Memory
-        Dim IO_Number As String
-        Dim IO_Name As String
-        Dim IO_Type As String
-        Dim IO_Val As String
-        Dim IO_Desc As String
+        Dim IO_Number, IO_Name, IO_Type, IO_Val, IO_Desc As String
         Dim SourceRowCount As Integer
-        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet).Select
+        Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
 
         SourceRowCount = ws.Cells(ws.Rows.Count, "A").End.xlUp.Row
 
@@ -323,22 +289,80 @@ Module MemoryData
 
     End Sub
 
-    Sub Copy_Memory_Data()
-        '
-        'Clear MemoryData sheet
+    Sub Remove_From_Descriptions()
 
+        Dim ws As Worksheet
+        Dim Keyword As String
+
+        ' Remove keywords from ValveC Memory
+        ws = XLpicsWB.Sheets("IOMem - ValveC")
+        For i = 10 To 17    'Data is in rows 10 to 17
+            Keyword = XLpicsWB.Sheets("Instructions").Range("C" & i).Cells.Value
+            If Keyword <> "" Then
+                ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
+                            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
+                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
+            End If
+        Next
+
+        ' Remove keywords from ValveSO_MO Memory
+        ws = XLpicsWB.Sheets("IOMem - ValveMO").Select
+        For i = 10 To 17    'Data is in rows 10 to 17
+                Keyword = XLpicsWB.Sheets("Instructions").Range("D" & i).Cells.Value
+                If Keyword <> "" Then
+                    ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
+                            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
+                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
+                End If
+            Next
+
+        ' Remove keywords from ValveSO_MO Memory
+        ws = XLpicsWB.Sheets("IOMem - ValveSO").Select
+        For i = 10 To 17    'Data is in rows 10 to 17
+            Keyword = XLpicsWB.Sheets("Instructions").Range("D" & i).Cells.Value
+            If Keyword <> "" Then
+                ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
+                            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
+                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
+            End If
+        Next
+
+        ' Remove keywords from Motor Memory
+        ws = XLpicsWB.Sheets("IOMem - Motor").Select
+        For i = 10 To 17    'Data is in rows 10 to 17
+            Keyword = XLpicsWB.Sheets("Instructions").Range("E" & i).Cells.Value
+            If Keyword <> "" Then
+                ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
+                            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
+                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
+            End If
+        Next
+
+        ' Remove keywords from VSD Memory
+        ws = XLpicsWB.Sheets("IOMem - VSD").Select
+        For i = 10 To 17    'Data is in rows 10 to 17
+            Keyword = XLpicsWB.Sheets("Instructions").Range("F" & i).Cells.Value
+            If Keyword <> "" Then
+                ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
+                        LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
+                        MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
+            End If
+        Next
+
+    End Sub
+
+    Sub Copy_Memory_Data()
+
+        'Clear MemoryData sheet
         Dim ws As Worksheet
         Dim RowCount As Integer
 
-        If WS_Exists("MemoryData") Then
-            ws = XLpicsWB.Sheets("MemoryData")
-            ws.Range("A2:F9999").Clear()
-        End If
+        ws = XLpicsWB.Sheets("MemoryData")
+        ws.Range("A2:F9999").Clear()
 
         'Copy AIn Memory Data
-        If WS_Exists("IOMem - AddIn") Then
-            ws = XLpicsWB.Sheets("IOMem - AIn")
-            RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
+        ws = XLpicsWB.Sheets("IOMem - AIn")
+        RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
             If RowCount > 1 Then
                 ws.Range("B2:F" & RowCount).Copy()
 
@@ -346,28 +370,23 @@ Module MemoryData
                 ws = XLpicsWB.Sheets("MemoryData")
                 ws.Range("A2").PasteSpecial(XlPasteType.xlPasteValues)
             End If
-        End If
 
         'Copy DIn Memory Data
-        If WS_Exists("IOMem - DIn") Then
-            ws = XLpicsWB.Sheets("IOMem - DIn")
-            RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
-            If RowCount > 1 Then
-                ws.Range("B2:F" & RowCount).Copy()
+        ws = XLpicsWB.Sheets("IOMem - DIn")
+        RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
+        If RowCount > 1 Then
+            ws.Range("B2:F" & RowCount).Copy()
 
-                'Paste data into MemoryData sheet
-                ws = XLpicsWB.Sheets("MemoryData")
-                Dim MemRowCount As Integer = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
-                Dim MemRow As Integer = MemRowCount + 1
-                ws.Range("A" & MemRow).PasteSpecial(XlPasteType.xlPasteValues)
-            End If
-
+            'Paste data into MemoryData sheet
+            ws = XLpicsWB.Sheets("MemoryData")
+            Dim MemRowCount As Integer = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
+            Dim MemRow As Integer = MemRowCount + 1
+            ws.Range("A" & MemRow).PasteSpecial(XlPasteType.xlPasteValues)
         End If
 
         'Copy ValveC Memory Data
-        If WS_Exists("IOMem - ValveC") Then
-            ws = XLpicsWB.Sheets("IOMem - ValveC")
-            RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
+        ws = XLpicsWB.Sheets("IOMem - ValveC")
+        RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
             If RowCount > 1 Then
                 ws.Range("B2:F" & RowCount).Copy()
 
@@ -377,12 +396,10 @@ Module MemoryData
                 Dim MemRow As Integer = MemRowCount + 1
                 ws.Range("A" & MemRow).PasteSpecial(XlPasteType.xlPasteValues)
             End If
-        End If
 
         'Copy ValveMO Memory Data
-        If WS_Exists("IOMem - ValveMO") Then
-            ws = XLpicsWB.Sheets("IOMem - ValveMO")
-            RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
+        ws = XLpicsWB.Sheets("IOMem - ValveMO")
+        RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
             If RowCount > 1 Then
                 ws.Range("B2:F" & RowCount).Copy()
 
@@ -392,12 +409,10 @@ Module MemoryData
                 Dim MemRow As Integer = MemRowCount + 1
                 ws.Range("A" & MemRow).PasteSpecial(XlPasteType.xlPasteValues)
             End If
-        End If
 
         'Copy ValveSO Memory Data
-        If WS_Exists("IOMem - ValveSO") Then
-            ws = XLpicsWB.Sheets("IOMem - ValveSO")
-            RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
+        ws = XLpicsWB.Sheets("IOMem - ValveSO")
+        RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
             If RowCount > 1 Then
                 ws.Range("B2:F" & RowCount).Copy()
 
@@ -407,12 +422,10 @@ Module MemoryData
                 Dim MemRow As Integer = MemRowCount + 1
                 ws.Range("A" & MemRow).PasteSpecial(XlPasteType.xlPasteValues)
             End If
-        End If
 
         'Copy Motor Memory Data
-        If WS_Exists("IOMem - Motor") Then
-            ws = XLpicsWB.Sheets("IOMem - Motor")
-            RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
+        ws = XLpicsWB.Sheets("IOMem - Motor")
+        RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
             If RowCount > 1 Then
                 ws.Range("B2:F" & RowCount).Copy()
 
@@ -422,12 +435,10 @@ Module MemoryData
                 Dim MemRow As Integer = MemRowCount + 1
                 ws.Range("A" & MemRow).PasteSpecial(XlPasteType.xlPasteValues)
             End If
-        End If
 
         'Copy VSD Memory Data
-        If WS_Exists("IOMem - VSD") Then
-            ws = XLpicsWB.Sheets("IOMem - VSD")
-            RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
+        ws = XLpicsWB.Sheets("IOMem - VSD")
+        RowCount = ws.Cells(ws.Rows.Count, "B").End(XlDirection.xlUp).Row
             If RowCount > 1 Then
                 ws.Range("B2:F" & RowCount).Copy()
                 ws.Range("A1").Select()
@@ -438,79 +449,6 @@ Module MemoryData
                 Dim MemRow As Integer = MemRowCount + 1
                 ws.Range("A" & MemRow).PasteSpecialPaste(XlPasteType.xlPasteValues)
             End If
-        End If
-
-    End Sub
-
-    Sub Remove_From_Descriptions()
-        '
-        Dim ws As Worksheet
-        Dim Keyword As String
-
-        ' Remove keywords from ValveC Memory
-        If WS_Exists("IOMem - ValveC") Then
-            ws = XLpicsWB.Sheets("IOMem - ValveC")
-            For i = 10 To 17    'Data is in rows 10 to 17
-                Keyword = XLpicsWB.Sheets("Instructions").Range("C" & i).Cells.Value
-                If Keyword <> "" Then
-                    ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
-                            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
-                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
-                End If
-            Next
-        End If
-
-        ' Remove keywords from ValveSO_MO Memory
-        If WS_Exists("IOMem - ValveMO") Then
-            ws = XLpicsWB.Sheets("IOMem - ValveMO").Select
-            For i = 10 To 17    'Data is in rows 10 to 17
-                Keyword = XLpicsWB.Sheets("Instructions").Range("D" & i).Cells.Value
-                If Keyword <> "" Then
-                    ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
-                            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
-                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
-                End If
-            Next
-        End If
-
-        ' Remove keywords from ValveSO_MO Memory
-        If WS_Exists("IOMem - ValveSO") Then
-            ws = XLpicsWB.Sheets("IOMem - ValveSO").Select
-            For i = 10 To 17    'Data is in rows 10 to 17
-                Keyword = XLpicsWB.Sheets("Instructions").Range("D" & i).Cells.Value
-                If Keyword <> "" Then
-                    ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
-                            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
-                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
-                End If
-            Next
-        End If
-
-        ' Remove keywords from Motor Memory
-        If WS_Exists("IOMem - Motor") Then
-            ws = XLpicsWB.Sheets("IOMem - Motor").Select
-            For i = 10 To 17    'Data is in rows 10 to 17
-                Keyword = XLpicsWB.Sheets("Instructions").Range("E" & i).Cells.Value
-                If Keyword <> "" Then
-                    ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
-                            LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
-                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
-                End If
-            Next
-        End If
-
-        ' Remove keywords from VSD Memory
-        If WS_Exists("IOMem - VSD") Then
-            ws = XLpicsWB.Sheets("IOMem - VSD").Select
-            For i = 10 To 17    'Data is in rows 10 to 17
-                Keyword = XLpicsWB.Sheets("Instructions").Range("F" & i).Cells.Value
-                If Keyword <> "" Then
-                    ws.Columns("F").Replace(What:=" " & Keyword, Replacement:="",
-                        LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
-                        MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
-                End If
-            Next
-        End If
 
     End Sub
 
