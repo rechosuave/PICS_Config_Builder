@@ -1,4 +1,5 @@
 
+Imports System.IO
 Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
 
@@ -42,20 +43,6 @@ Module Utilities
     Public Sub Clear_All_Sheets()
 
         Clear_Sheet_Type("")
-
-    End Sub
-
-    Public Sub Reset_Sheet(ByRef wrkBook As Workbook, sheet As String)
-
-        Dim lastSht As Worksheet
-        lastSht = wrkBook.ActiveSheet
-
-        ' Reset selection to A1
-        wrkBook.Sheets(sheet).Select
-        lastSht.Range("A1").Select()
-
-        ' Return to previous sheet
-        lastSht.Select()
 
     End Sub
 
@@ -170,6 +157,25 @@ Module Utilities
         End If
 
         Return CPU_Name
+
+    End Function
+
+    Public Function IsFileOpen(ByRef sName As String) As Boolean
+
+        ' check if a file is still open (hanging process)
+        Dim blnRetVal As Boolean = False
+        Dim fs As FileStream = Nothing
+
+        Try
+            fs = File.Open(sName, FileMode.Open, FileAccess.Read, FileShare.None)
+        Catch ex As Exception
+            blnRetVal = True
+        Finally
+            'If Not IsNothing(fs) Then : fs.Close() : End If
+            If Not IsNothing(fs) Then blnRetVal = False
+        End Try
+
+        Return blnRetVal
 
     End Function
 

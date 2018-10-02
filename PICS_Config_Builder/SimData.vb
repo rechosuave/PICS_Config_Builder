@@ -83,75 +83,8 @@ Module SimData
                 DesignTag = Replace(DesignTag, "-", "_")    'Change dashes to underscores
                 IOVariable = Replace(IOVariable, ".", "_")  'Change dot to underscore
 
-                Select Case IOType          ' 5 IO types - DI, DO, AI, AO, RTD
-                    Case InStr(IOType, "DI") > 0      'Paste First Row
-                        SimName = IOVariable
-                        SimType = "B R/W"
-                        SimDefVal = "0"
-                        SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
-                        SimDesc = Description
-
-                        ws = XLpicsWB.Sheets(DataSheet)
-                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
-                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
-                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
-                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
-                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
-                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
-
-                        ws = XLpicsWB.Sheets(stripSheet)        ' Write data to IO tag sheet
-                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
-                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
-                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
-                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
-                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
-                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
-
-                        SimName = SimName & "_Flt"      'Paste Second (Fault) Row
-                        SimIOAddr = Replace(SimIOAddr, "Data", "Fault")
-                        SimDesc = Description & " CH_FLT"
-
-                        ws = XLpicsWB.Sheets(DataSheet)
-                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
-                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
-                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
-                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
-                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
-                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
-
-                        ' Write channel fault item to IO tag sheet
-                        ws = XLpicsWB.Sheets(stripSheet)
-                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
-                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
-                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
-                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
-                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
-                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
-
-                    Case InStr(IOType, "DO") > 0      'Paste Row
-                        SimName = IOVariable
-                        SimType = "B R"
-                        SimDefVal = ""
-                        SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
-                        SimDesc = Description
-
-                        ws = XLpicsWB.Sheets(DataSheet)
-                        RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
-                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
-                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
-                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
-                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
-                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
-
-                        ws = XLpicsWB.Sheets(stripSheet)
-                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
-                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
-                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
-                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
-                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
-                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
-
-                    Case InStr(IOType, "AI") > 0      'Paste First Row
+                Select Case IOType          ' 5 IO types - AI, AO, DI, DO, RTD
+                    Case "AI"                           'Paste First Row
                         SimName = IOVariable
                         SimType = "F R/W"
                         SimDefVal = "0"
@@ -217,7 +150,7 @@ Module SimData
                         ws.Range("D" & RowCount + 1).Cells.Value = OutputMin
                         ws.Range("E" & RowCount + 1).Cells.Value = OutputMax
 
-                    Case InStr(IOType, "AO") > 0        'Paste Row
+                    Case "AO"                           'Paste Row
                         SimName = IOVariable
                         SimType = "F R"
                         SimDefVal = ""
@@ -248,7 +181,75 @@ Module SimData
                         ws.Range("D" & RowCount + 1).Cells.Value = OutputMin
                         ws.Range("E" & RowCount + 1).Cells.Value = OutputMax
 
-                    Case InStr(IOType, "RTD") > 0       'Paste First Row
+                    Case "DI"                           'Paste First Row
+                        SimName = IOVariable
+                        SimType = "B R/W"
+                        SimDefVal = "0"
+                        SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
+                        SimDesc = Description
+
+                        ws = XLpicsWB.Sheets(DataSheet)
+                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
+                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
+                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
+                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
+                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
+                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
+
+                        ws = XLpicsWB.Sheets(stripSheet)        ' Write data to IO tag sheet
+                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
+                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
+                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
+                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
+                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
+                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
+
+                        SimName = SimName & "_Flt"      'Paste Second (Fault) Row
+                        SimIOAddr = Replace(SimIOAddr, "Data", "Fault")
+                        SimDesc = Description & " CH_FLT"
+
+                        ws = XLpicsWB.Sheets(DataSheet)
+                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
+                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
+                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
+                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
+                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
+                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
+
+                        ' Write channel fault item to IO tag sheet
+                        ws = XLpicsWB.Sheets(stripSheet)
+                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
+                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
+                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
+                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
+                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
+                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
+
+                    Case "DO"                           'Paste Row
+                        SimName = IOVariable
+                        SimType = "B R"
+                        SimDefVal = ""
+                        SimIOAddr = "[" & Prefix & "_Sim]" & IOAddress
+                        SimDesc = Description
+
+                        ws = XLpicsWB.Sheets(DataSheet)
+                        RowCount = ws.Cells(ws.Rows.Count, "A").End(XlDirection.xlUp).Row
+                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
+                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
+                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
+                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
+                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
+
+                        ws = XLpicsWB.Sheets(stripSheet)
+                        RowCount = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
+                        ws.Range("A" & RowCount + 1).Cells.Value = SimName
+                        ws.Range("B" & RowCount + 1).Cells.Value = SimType
+                        ws.Range("C" & RowCount + 1).Cells.Value = SimDefVal
+                        ws.Range("D" & RowCount + 1).Cells.Value = SimIOAddr
+                        ws.Range("E" & RowCount + 1).Cells.Value = SimDesc
+
+
+                    Case "RTD"                       'Paste First Row
                         SimName = IOVariable
                         SimType = "F R/W"
                         SimDefVal = "0"
@@ -363,13 +364,18 @@ Module SimData
 
     End Sub
 
-    Sub Remove_Spaces(ByVal shtName As String, ByVal remColumn As String)
+    Sub Remove_Spaces(ByVal destSheet As String, ByVal DestCol As String)
         '
-        Dim ws As Worksheet = XLpicsWB.Sheets(shtName)
+        Dim ws As Worksheet = XLpicsWB.Sheets(destSheet)
+        Dim RowCount As Integer = ws.Cells(ws.Rows.Count, DestCol).End(XlDirection.xlUp).Row
+        Dim rng As Range = ws.Range(DestCol & "1", ws.Range(DestCol & "1").End(XlDirection.xlDown))
 
-        ws.Columns(remColumn).Replace(What:="  ", Replacement:=" ", LookAt:=XlLookAt.xlPart,
-                        SearchOrder:=XlSearchOrder.xlByRows, MatchCase:=False, SearchFormat:=False,
-                        ReplaceFormat:=False)
+        ' following commented statement no longer works in Excel for VB
+        ' ws.Columns(DestCol).Replace(What:="  ", Replacement:=" ", LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
+
+        For i = 1 To RowCount
+            rng(i).Value = Replace(rng(i).Value, "  ", " ")
+        Next i
 
     End Sub
 
@@ -400,27 +406,6 @@ Module SimData
         End If
 
     End Function
-
-    Sub Remove_From_Desc(ByVal sSheet As String, ByVal x As Integer)
-
-        Dim DelWord, OldDesc, NewDesc As String
-        Dim ws As Worksheet = XLpicsWB.Sheets(sSheet)
-        Dim RowCount As Integer = ws.Cells(ws.Rows.Count, "D").End(XlDirection.xlUp).Row
-        DelWord = InputBox("Please enter the word you wish to delete:", "Delete From Descriptions")
-
-        'Range("H1").FormulaR1C1 = DelWord
-        If DelWord <> "" Then
-            For i = 8 To RowCount
-                ws.Range("D" & i).Select()
-                OldDesc = ws.Range("D" & i).Value
-                NewDesc = Replace(OldDesc, DelWord, "")
-                ws.Range("D" & i).Value = NewDesc
-            Next
-        End If
-
-        ws.Range("D8").Select()
-
-    End Sub
 
     Function SelectWS(ByVal sheet As String) As Worksheet
         ' 

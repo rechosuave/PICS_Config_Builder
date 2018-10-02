@@ -30,10 +30,11 @@ Module WireData
         Dim minMax As Boolean = WS_Exists(minMaxSheet)
         Dim ws As Worksheet = XLpicsWB.Sheets(SourceSheet)
         Dim RowGap As Integer = GetRowGap(shtTemplate)
-        Dim ItemCount As Integer = ws.Cells.CountIf("A:A", countStr)
+        Dim rng As Range = ws.Range("A:A")
+        Dim ItemCount As Integer = ws.Application.WorksheetFunction.CountIf(rng, countStr)
         Dim maxItemCount As Integer = GetMaxItems(shtTemplate)
-        Dim ReqSheets As Integer = ws.Cells.RoundUp(ItemCount / maxItemCount, 0)
-        Dim itemRng As Excel.Range = ws.Range("A1")
+        Dim ReqSheets As Integer = ws.Application.WorksheetFunction.RoundUp(ItemCount / maxItemCount, 0)
+        Dim itemRng As Range = ws.Range("A1")
         Dim InMinCol, InMaxCol, OutMinCol, OutMaxCol As Integer
         Dim EUMinCol, EUMaxCol, RawMinCol, RawMaxCol, RawFltCol As Integer
 
@@ -69,7 +70,7 @@ Module WireData
 
             ws.Range("A1").Cells.Value = "_Wire_" & typeStr & "_" & shtIndex
 
-            For itemIndex = 1 To maxItemCount
+            For i = 1 To maxItemCount
 
                 Dim nextRng As Range
                 nextRng = ws.Range("A:A").Find(countStr, itemRng)
@@ -78,7 +79,7 @@ Module WireData
                 If nextRng.Row > itemRng.Row Then
 
                     Dim itemNum As String
-                    itemNum = Right("00" & itemIndex, 2)
+                    itemNum = Right("00" & i, 2)
 
                     Dim searchStr As String
                     searchStr = Replace(countStr, "*", "")
@@ -103,7 +104,7 @@ Module WireData
 
                             Dim EU_Min, EU_Max, Raw_Min, Raw_Max, Raw_Flt As Double
 
-                            Dim CurrentRow As Integer = RowGap * (itemIndex - 1) + 1
+                            Dim CurrentRow As Integer = RowGap * (i - 1) + 1
                             Dim ItemRow As Excel.Range = XLpicsWB.Sheets(minMaxSheet).Range("A:A").Find(nextRng.Value).Row
                             EU_Min = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, InMinCol).Value
                             EU_Max = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, InMaxCol).Value
@@ -126,9 +127,7 @@ Module WireData
 
                 End If
 
-            Next
-
-            ws.Range("A1").Select()
+            Next i
 
             Call ValidateOPC1(NewSheetName)
             Call ReplaceOPC1(NewSheetName)
@@ -271,7 +270,7 @@ Module WireData
 
         ' Replaces OPC1. in a sheet with the CPU_Name
         '
-        XLpicsWB.Sheets(NewSheetName).UsedRange.Select
+        XLpicsWB.Sheets(NewSheetName).UsedRange
 
         XLpicsWB.Sheets(NewSheetName).Cells.Replace(What:="OPC1.",
                             Replacement:=CPU_Name & ".", LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,

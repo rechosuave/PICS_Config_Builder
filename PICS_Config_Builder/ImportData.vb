@@ -6,7 +6,7 @@ Module ImportData
 
     Public XLApp As New Application
     Public XLProjectWB, XLpicsWB As Workbook
-    Public DirectoryName, CPU_Name As String      'user selected directory for PICS Config File
+    Public DirectoryName, xlProjectFN, XLpicsFN, CPU_Name As String      'user selected directory for PICS Config File
     Public picsBuilder, projectBuilder As String    'Workbook names
     Const fnXtnFilter = "Excel Files (*.xls;*.xlsx;*.xlsm),*.xls;*.xlsx;*xlsm"
 
@@ -33,20 +33,20 @@ Module ImportData
 
             Call Import_Data()         ' Import "IO Sheets" worksheet from Project file into "IO Sheets" in PICS file
 
-            'Call Generate_Sim_Data()    ' Build OPC tags
-            'Call Generate_Memory_Data() ' Build Global tags
-            'Call Generate_Wire_Data()   ' Build Wire data files for PICS simulator
+            Call Generate_Sim_Data()    ' Build OPC tags
+            Call Generate_Memory_Data() ' Build Global tags
+            Call Generate_Wire_Data()   ' Build Wire data files for PICS simulator
 
-            'Dim outFolder As String
-            'outFolder = Create_Output_Folder(XLpicsWB)
+            Dim outFolder As String
+            outFolder = Create_Output_Folder(XLpicsWB)
 
-            'Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
-            'Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
-            'Call Export_Wire_Data(XLpicsWB, outFolder)
+            Call Export_CSV(outFolder, "SimData", "OPC_Tags.csv")
+            Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
+            Call Export_Wire_Data(XLpicsWB, outFolder)
 
         End If
 
-        If IsReference(XLProjectWB) Then        ' is the project file workbook still open
+        If IsFileOpen(xlProjectFN) Then        ' is the project file workbook still open
             If XLProjectWB.Name.Contains(".xlsm") Then  'Re-enable workbook macros security settings prior to closing Project file
                 XLProjectWB.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
                 XLProjectWB.Close(SaveChanges:=False)
@@ -56,16 +56,17 @@ Module ImportData
             End If
         End If
 
-        If XLpicsWB.Name.Contains(".xlsm") Then     'Re-enable Excel application macros security settings prior to closing file
-            Dim ws As Worksheet = XLpicsWB.Sheets(2)
-            ws.Activate()
-            XLpicsWB.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
-        Else
-            Dim ws As Worksheet = XLpicsWB.Sheets(1)
-            ws.Activate()
+        If IsFileOpen(XLpicsFN) Then        ' is the PICS Config file workbook still open
+            If XLpicsWB.Name.Contains(".xlsm") Then     'Re-enable Excel application macros security settings prior to closing file
+                Dim ws As Worksheet = XLpicsWB.Sheets(2)
+                ws.Activate()
+                XLpicsWB.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
+            Else
+                Dim ws As Worksheet = XLpicsWB.Sheets(1)
+                ws.Activate()
+            End If
+            XLpicsWB.Close(SaveChanges:=True)
         End If
-
-        XLpicsWB.Close()
 
         XLApp.Quit()
 
@@ -107,24 +108,23 @@ Module ImportData
     Sub OpenXLProjectFN()
 
         'Select and open the Excel project file (PLC IO Mapping) that will be used to create PICS simulation files
-        Dim fn As String
         Dim title = "Open - Select Project Config File"
 
-        fn = XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title)
-        If fn Is Nothing Or fn = "False" Then 'operator cancelled operation to open the project file
+        xlProjectFN = XLApp.GetOpenFilename(FileFilter:=fnXtnFilter, FilterIndex:=2, Title:=title)
+        If xlProjectFN Is Nothing Or xlProjectFN = "False" Then 'operator cancelled operation to open the project file
             XLApp.Quit()
             Exit Sub
         End If
 
-        DirectoryName = IO.Path.GetDirectoryName(fn)
+        DirectoryName = IO.Path.GetDirectoryName(xlProjectFN)
         XLApp.DefaultFilePath = DirectoryName
         FileIO.FileSystem.CurrentDirectory = DirectoryName     ' set directory path
 
-        If fn.Contains(".xlsm") Then    'Disable Excel application macros security settings when opening file
+        If xlProjectFN.Contains(".xlsm") Then    'Disable Excel application macros security settings when opening file
             XLApp.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityForceDisable
         End If
 
-        XLProjectWB = XLApp.Workbooks.Open(Filename:=fn, ReadOnly:=True)
+        XLProjectWB = XLApp.Workbooks.Open(Filename:=xlProjectFN, ReadOnly:=True)
 
     End Sub
 
@@ -133,7 +133,7 @@ Module ImportData
         'Select or create PICS Excel file(workbook) that will be used to create PICS simulation files
         Dim title = "Open - Select PICS Config File"
         Dim response As MsgBoxResult
-        Dim fn, XLpicsFN As String
+        Dim fn As String
 
         response = MsgBox("Create A New PICS Config Builder file?", vbYesNo)
 

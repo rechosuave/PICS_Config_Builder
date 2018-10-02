@@ -4,6 +4,7 @@ Imports Microsoft.Office.Interop.Excel
 
 
 Module Templates
+    Public xlTemplateFN As String      'user selected directory for PICS Config File
 
     Public XLTemplateWB As Workbook
     Sub Validate_PICS_WB()
@@ -104,6 +105,7 @@ Module Templates
             Else
                 ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(1))
                 ws.Name = shtName
+                ws.Range("A2:AA9999").Clear()
             End If
         Else
             ws = XLpicsWB.Sheets(shtName)
@@ -137,6 +139,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -169,6 +172,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -202,6 +206,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -237,6 +242,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -272,6 +278,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -307,6 +314,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -342,6 +350,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -377,6 +386,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -412,6 +422,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -447,6 +458,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -482,6 +494,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -517,6 +530,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -552,6 +566,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -587,6 +602,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -622,6 +638,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -657,6 +674,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -692,6 +710,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -727,6 +746,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -762,6 +782,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -798,6 +819,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -834,6 +856,7 @@ Module Templates
         If Not shtFound Then        ' create worksheet
             ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
             ws.Name = shtName
+            ws.Range("A2:AA9999").Clear()
         Else
             Exit Sub  'worksheet already exits - nothing to do
         End If
@@ -914,20 +937,19 @@ Module Templates
 
         Dim title = "Open - Select the Excel Template for Wire files"
         Dim filter = "Excel Files (*.xltx),*.xltx"
-        Dim fn As String
         Dim response As MsgBoxResult
 
         MsgBox("Select Excel Wire Template file: " & Chr(34) & " PICS_Wire_Template.xltx" & Chr(34), vbOKOnly)
 
         Do
-            fn = XLApp.GetOpenFilename(FileFilter:=filter, FilterIndex:=2, Title:=title)
-            If IsNothing(fn) Then     ' Cancel button pressed
+            xlTemplateFN = XLApp.GetOpenFilename(FileFilter:=filter, FilterIndex:=2, Title:=title)
+            If IsNothing(xlTemplateFN) Then     ' Cancel button pressed
                 response = MsgBox("Cancel Operation?", vbYesNo)
                 If response = vbYes Then Exit Sub
             End If
-        Loop Until Not IsNothing(fn)
+        Loop Until Not IsNothing(xlTemplateFN)
 
-        XLTemplateWB = XLApp.Workbooks.Open(fn)
+        XLTemplateWB = XLApp.Workbooks.Open(xlTemplateFN)
 
     End Sub
 
