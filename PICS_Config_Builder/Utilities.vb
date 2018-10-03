@@ -98,10 +98,7 @@ Module Utilities
 
     Public Function Create_Output_Folder(ByRef ActiveWorkbook As Workbook) As String
 
-        Dim outFolder As String
-        Dim topFolder As String
-        Dim subFolder As String
-        Dim pathName As String
+        Dim outFolder, topFolder, subFolder, pathName As String
 
         pathName = ActiveWorkbook.Path
 
@@ -122,21 +119,19 @@ Module Utilities
 
     End Function
 
-    Sub Export_CSV(outFolder As String, sheetStr As String, saveName As String)
+    Sub Export_CSV(ByRef outFolder As String, ByVal sheetStr As String, ByVal saveName As String)
 
         ' Declare variables, create new Excel workbook object
-        Dim wb As Workbook = XLApp.Workbooks.Add
+        Dim wb As Workbook = XLApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet)  ' create new workbook
         Dim ws As Worksheet = wb.ActiveSheet
         Dim savePath As String = outFolder & "\" & saveName
 
-        ws.Sheets(sheetStr).Visible = True
-        ws.Sheets(sheetStr).Copy(Before:=wb.Sheets(1))
-        ws.Sheets(sheetStr).Visible = False
-        wb.DisplayAlerts = False
+        ws.Name = sheetStr
+        wb.Application.DisplayAlerts = True
         wb.SaveAs(Filename:=savePath, FileFormat:=XlFileFormat.xlCSV)
+        wb.Application.DisplayAlerts = True
 
         wb.Close(False)
-        wb.DisplayAlerts = True
 
     End Sub
 

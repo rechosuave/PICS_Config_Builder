@@ -5,6 +5,10 @@ Public Class Form1
 
         Call Main()
 
+        PleaseWaitForm.Visible = False
+        ' Set cursor as hourglass
+        Cursor.Current = Cursors.Default
+
     End Sub
 
     Private Sub BtnClearAllSheets_Click(sender As Object, e As EventArgs) Handles BtnClearAllSheets.Click
@@ -19,4 +23,7 @@ Public Class Form1
 
     End Sub
 
+    Private Sub PleaseWaitForm_Click(sender As Object, e As EventArgs) Handles PleaseWaitForm.Click
+
+    End Sub
 End Class

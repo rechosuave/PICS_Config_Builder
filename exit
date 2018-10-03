@@ -1,0 +1,65 @@
+[33mcommit 4da5f5db828b0df43428739eef7436105771018b[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: rechosuave <19471723+rechosuave@users.noreply.github.com>
+Date:   Wed Sep 26 17:39:19 2018 -0500
+
+    Debug all sheets now working on wire outputs
+
+[33mcommit 8a287e56b5781fd677ce4be974b896aae6397218[m
+Author: rechosuave <19471723+rechosuave@users.noreply.github.com>
+Date:   Tue Sep 25 18:20:11 2018 -0500
+
+    Completed I/O to Excel files - next debug PICS file worksheet creations
+
+[33mcommit b72f31983c5b61e8ba9f90ef16c1ac8418085e00[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: rechosuave <19471723+rechosuave@users.noreply.github.com>
+Date:   Mon Sep 24 18:01:24 2018 -0500
+
+    fixed all Excel files to open
+
+[33mcommit ce53bdae5805b36b6a5c44aeefa48a2a772468ca[m
+Author: rechosuave <19471723+rechosuave@users.noreply.github.com>
+Date:   Mon Sep 24 01:03:45 2018 -0500
+
+    Latest changes as of Friday Sept 21, 2018
+
+[33mcommit c5bd1b20b04951dec3a8fbe4ac3b8f87ff79a3ea[m
+Author: rechosuave <19471723+rechosuave@users.noreply.github.com>
+Date:   Fri Sep 21 17:52:53 2018 -0500
+
+    fixed function OpenXLProjectFN
+
+[33mcommit 7e5239ecf7e63d23d9cead9d5c875a73a167c18f[m
+Author: rechosuave <19471723+rechosuave@users.noreply.github.com>
+Date:   Thu Sep 20 16:51:18 2018 -0500
+
+    asdfadsf
+
+[33mcommit 29ab67d0aa2ae74a59c4fadb40dd2eba4ae33045[m
+Author: rechosuave <19471723+rechosuave@users.noreply.github.com>
+Date:   Thu Sep 20 16:45:38 2018 -0500
+
+    2nd commit
+
+[33mcommit 1c89cb8638d15c3a6107f9094ec809ed6b1ebf68[m
+Author: rechosuave <19471723+rechosuave@users.noreply.github.com>
+Date:   Thu Sep 20 09:30:38 2018 -0500
+
+    c.crane--Sept-20-2018  error free syntax version prior to debug
+
+[33mcommit b4f90d71ae5707e5bb55a9f1045cd399883bec75[m
+Author: Charles Crane <19471723+rechosuave@users.noreply.github.com>
+Date:   Thu Sep 20 09:20:55 2018 -0500
+
+    Latest update/no errors
+
+[33mcommit ebb9ffbed4a51f42bac845532aba0fb71cc30218[m
+Author: Charles Crane <c2crane@gmail.com>
+Date:   Mon Sep 10 16:46:55 2018 -0500
+
+    Add project files.
+
+[33mcommit 7d7557a73a451b67c8792a52c33a068890c6fe5f[m
+Author: Charles Crane <c2crane@gmail.com>
+Date:   Mon Sep 10 16:46:50 2018 -0500
+
+    Add .gitignore and .gitattributes.

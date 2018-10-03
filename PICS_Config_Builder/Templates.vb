@@ -951,6 +951,10 @@ Module Templates
 
         XLTemplateWB = XLApp.Workbooks.Open(xlTemplateFN)
 
+        Form1.PleaseWaitForm.Visible = True
+        ' Set cursor as hourglass
+        Cursor.Current = Cursors.WaitCursor
+
     End Sub
 
 End Module

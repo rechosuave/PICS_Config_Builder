@@ -27,6 +27,7 @@ Partial Class Form1
         Me.BtnClearAllSheets = New System.Windows.Forms.Button()
         Me.BtnExit = New System.Windows.Forms.Button()
         Me.CPU_PREFIX = New System.Windows.Forms.TextBox()
+        Me.PleaseWaitForm = New System.Windows.Forms.Label()
         Me.SuspendLayout()
         '
         'Label1
@@ -73,11 +74,25 @@ Partial Class Form1
         Me.CPU_PREFIX.Size = New System.Drawing.Size(221, 22)
         Me.CPU_PREFIX.TabIndex = 4
         '
+        'PleaseWaitForm
+        '
+        Me.PleaseWaitForm.AutoSize = True
+        Me.PleaseWaitForm.BackColor = System.Drawing.Color.Coral
+        Me.PleaseWaitForm.Font = New System.Drawing.Font("Microsoft Sans Serif", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.PleaseWaitForm.Location = New System.Drawing.Point(194, 235)
+        Me.PleaseWaitForm.Name = "PleaseWaitForm"
+        Me.PleaseWaitForm.Size = New System.Drawing.Size(119, 20)
+        Me.PleaseWaitForm.TabIndex = 5
+        Me.PleaseWaitForm.Text = "Please Wait..."
+        Me.PleaseWaitForm.UseWaitCursor = True
+        Me.PleaseWaitForm.Visible = False
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(473, 307)
+        Me.Controls.Add(Me.PleaseWaitForm)
         Me.Controls.Add(Me.CPU_PREFIX)
         Me.Controls.Add(Me.BtnExit)
         Me.Controls.Add(Me.BtnClearAllSheets)
@@ -97,4 +112,5 @@ Partial Class Form1
     Friend WithEvents BtnClearAllSheets As System.Windows.Forms.Button
     Friend WithEvents BtnExit As System.Windows.Forms.Button
     Friend WithEvents CPU_PREFIX As System.Windows.Forms.TextBox
+    Friend WithEvents PleaseWaitForm As Label
 End Class

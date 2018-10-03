@@ -72,66 +72,69 @@ Module WireData
 
             For i = 1 To maxItemCount
 
-                Dim nextRng As Range
-                nextRng = ws.Range("A:A").Find(countStr, itemRng)
+                Dim nextRng As Range = ws.Range("A:A").Find(What:=countStr, After:=itemRng)     ' if nexRng is Nothing - skip loop
 
-                ' If there is another item to add
-                If nextRng.Row > itemRng.Row Then
+                If Not (nextRng Is Nothing) Then        ' c2-10-02-2018: condition statement added since range expression netRng.Row is nothing will crash loop
+                    ' If there is another item to add
+                    If nextRng.Row > itemRng.Row Then
 
-                    Dim itemNum As String
-                    itemNum = Right("00" & i, 2)
+                        Dim itemNum As String
+                        itemNum = Right("00" & i, 2)
 
-                    Dim searchStr As String
-                    searchStr = Replace(countStr, "*", "")
-                    searchStr = Replace(searchStr, "?", "\w")
+                        Dim searchStr As String
+                        searchStr = Replace(countStr, "*", "")
+                        searchStr = Replace(searchStr, "?", "\w")
 
-                    Dim re As New RegExp
+                        Dim re As New RegExp
 
-                    With re
-                        .Global = True
-                        .Multiline = True
-                        .IgnoreCase = False
-                        .Pattern = searchStr
-                    End With
+                        With re
+                            .Global = True
+                            .Multiline = True
+                            .IgnoreCase = False
+                            .Pattern = searchStr
+                        End With
 
-                    Dim TagName = re.Replace(nextRng.Value, "")
+                        Dim TagName = re.Replace(nextRng.Value, "")
 
-                    ws.Cells.Replace(What:=Template_Name & itemNum, Replacement:=TagName, LookAt:=XlLookAt.xlPart,
+                        ws.Cells.Replace(What:=Template_Name & itemNum, Replacement:=TagName, LookAt:=XlLookAt.xlPart,
                                              SearchOrder:=XlSearchOrder.xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
 
-                    If minMax Then
-                        If typeStr = "AIn" Then
+                        If minMax Then
+                            If typeStr = "AIn" Then
 
-                            Dim EU_Min, EU_Max, Raw_Min, Raw_Max, Raw_Flt As Double
+                                Dim EU_Min, EU_Max, Raw_Min, Raw_Max, Raw_Flt As Double
 
-                            Dim CurrentRow As Integer = RowGap * (i - 1) + 1
-                            Dim ItemRow As Excel.Range = XLpicsWB.Sheets(minMaxSheet).Range("A:A").Find(nextRng.Value).Row
-                            EU_Min = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, InMinCol).Value
-                            EU_Max = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, InMaxCol).Value
-                            Raw_Min = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, OutMinCol).Value
-                            Raw_Max = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, OutMaxCol).Value
-                            Raw_Flt = 0.8 * Raw_Min
+                                Dim CurrentRow As Integer = RowGap * (i - 1) + 1
+                                Dim ItemRow As Excel.Range = XLpicsWB.Sheets(minMaxSheet).Range("A:A").Find(nextRng.Value).Row
+                                EU_Min = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, InMinCol).Value
+                                EU_Max = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, InMaxCol).Value
+                                Raw_Min = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, OutMinCol).Value
+                                Raw_Max = XLpicsWB.Sheets(minMaxSheet).Cells(ItemRow, OutMaxCol).Value
+                                Raw_Flt = 0.8 * Raw_Min
 
-                            If Raw_Max > 0 Then
-                                ws.Cells(CurrentRow, EUMinCol).Cells.Value = EU_Min
-                                ws.Cells(CurrentRow, EUMaxCol).Cells.Value = EU_Max
-                                ws.Cells(CurrentRow, RawMinCol).Cells.Value = Raw_Min
-                                ws.Cells(CurrentRow, RawMaxCol).Cells.Value = Raw_Max
-                                ws.Cells(CurrentRow, RawFltCol).Cells.Value = Raw_Flt
+                                If Raw_Max > 0 Then
+                                    ws.Cells(CurrentRow, EUMinCol).Cells.Value = EU_Min
+                                    ws.Cells(CurrentRow, EUMaxCol).Cells.Value = EU_Max
+                                    ws.Cells(CurrentRow, RawMinCol).Cells.Value = Raw_Min
+                                    ws.Cells(CurrentRow, RawMaxCol).Cells.Value = Raw_Max
+                                    ws.Cells(CurrentRow, RawFltCol).Cells.Value = Raw_Flt
+                                End If
+
                             End If
-
                         End If
+
+                        itemRng = nextRng.Offset(1, 0)
+
                     End If
 
-                    itemRng = nextRng.Offset(1, 0)
-
-                End If
+                End If      'added for nextRng Is Nothing
 
             Next i
 
             Call ValidateOPC1(NewSheetName)
             Call ReplaceOPC1(NewSheetName)
-        Next
+
+        Next shtIndex
 
     End Sub
 
@@ -192,21 +195,25 @@ Module WireData
         ' Pre-Pass OPC1 tags for existence
         ' Checks against SimData sheet for existence of OPC1 tag that it is looking to use
 
+        Dim output, parseArr(), parse, checkStr, tag As String
         Dim searchRng As Range, firstMatch As Range = Nothing
-        Dim ws As Worksheet
+        Dim ws As Worksheet = XLpicsWB.Sheets(sheetStr)
+        Dim oRE As New RegExp
+        Dim oMatch As Object
 
-        ws = XLpicsWB.Sheets(sheetStr)
+        With oRE     ' routine RegExp is a concise and flexible notation for finding and replacing patterns of text
+            .Global = False
+            .Multiline = False
+            .IgnoreCase = False
+            .Pattern = "OPC1\.\w*"
+        End With
 
-        searchRng = ws.Range("A1").Value
+        searchRng = ws.Range("A1")
 
         Do While Not searchRng Is Nothing
 
             searchRng = ws.Range("A:ZZ").Find(What:="OPC1.", After:=searchRng, LookAt:=XlLookAt.xlPart)
-
-            Dim output, parseArr(), parse As String
-
             parseArr = Nothing
-
             parse = searchRng.Value
             output = ""
 
@@ -214,34 +221,20 @@ Module WireData
             If InStr(parse, "|") > 0 Then
                 parseArr = parse.Split("|")
             Else
-                parseArr.SetValue(parse, 0)
+                parseArr = {parse}
             End If
 
-            Dim checkStr As String
-
             For Each checkStr In parseArr
-
-                Dim tag As String
-                Dim re As New RegExp
-
-                With re
-                    .Global = False
-                    .Multiline = False
-                    .IgnoreCase = False
-                    .Pattern = "OPC1\.\w*"
-                End With
-
-                Dim result As Object
-                result = re.Execute(checkStr)
-
-                tag = result(0)
+                oMatch = oRE.Execute(checkStr)
+                tag = oMatch.ToString
                 tag = Replace(tag, "OPC1.", "")
 
                 If Is_Sim_Data(tag) Then
                     output = checkStr
                     Exit For
                 End If
-            Next
+
+            Next checkStr
 
             searchRng.Value = output
 
@@ -251,7 +244,21 @@ Module WireData
                 searchRng = Nothing
             End If
 
-        Loop
+        Loop  'searchRng      
+
+    End Sub
+
+    Sub ReplaceOPC1(ByRef NewSheetName As String)
+
+        ' Replaces OPC1. in a sheet with the CPU_Name
+        '
+        Dim ws As Worksheet
+
+        ws = XLpicsWB.Sheets(NewSheetName)
+        ws.UsedRange.Select()
+
+        ws.Cells.Replace(What:="OPC1.", Replacement:=CPU_Name & ".", LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
+                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
 
     End Sub
 
@@ -265,19 +272,6 @@ Module WireData
         Return Not (searchRng Is Nothing)
 
     End Function
-
-    Sub ReplaceOPC1(ByRef NewSheetName As String)
-
-        ' Replaces OPC1. in a sheet with the CPU_Name
-        '
-        XLpicsWB.Sheets(NewSheetName).UsedRange
-
-        XLpicsWB.Sheets(NewSheetName).Cells.Replace(What:="OPC1.",
-                            Replacement:=CPU_Name & ".", LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
-                            MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
-        XLpicsWB.Sheets(NewSheetName).Range("A1").Select
-
-    End Sub
 
     Sub Color_Wire_Tabs()
 
@@ -318,7 +312,7 @@ Module WireData
 
     End Sub
 
-    Sub Export_Wire_Data(ByRef wb As Workbook, outFolder As String)
+    Sub Export_Wire_Data(ByRef wb As Workbook, ByRef outFolder As String)
 
         Dim savePath As String
 
@@ -342,21 +336,23 @@ Module WireData
 
         Dim i As Integer = 1
         Dim wsName As String = "Wire_" & typeStr & "_" & i
+        Dim wb, newBook As Workbook
+        Dim ws, newSht As Worksheet
+
+        wb = XLpicsWB
 
         Do While WS_Exists(wsName)
 
-            Dim book As Workbook
+            newBook = XLApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet)  ' create new workbook 
+            ws = wb.Sheets(wsName)      ' select worksheet to copy to new workbook
+            ws.Copy(Before:=newBook.Sheets(1))
+            newSht = newBook.Sheets(1)
+            newSht.Delete()
+            newSht = newBook.ActiveSheet
+            newSht.Name = wsName        ' rename new worksheet in new workbook
 
-            book = XLApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet)  ' create new workbook 
-
-            Dim Count As Integer = book.Worksheets.Count
-            book.Sheets(wsName).Copy(book.Worksheets(1))
-
-            book.Worksheets(1).Range("A1").EntireRow.Insert
-            book.Worksheets(1).Range("A1").Value = ";PICS for Windows - Device Wiring Export V1.10"
-            book.Worksheets(1).SaveAs(savePath & wsName & ".wir", XlFileFormat.xlTextWindows)
-            book.Close(False)
-            book = Nothing
+            newBook.SaveAs(savePath & wsName & ".wir", XlFileFormat.xlTextWindows)
+            newBook.Close(False)
 
             i = i + 1
             wsName = "Wire_" & typeStr & "_" & i
