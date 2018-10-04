@@ -1,4 +1,3 @@
-Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
 
 Module SimData
@@ -426,7 +425,7 @@ Module SimData
     End Function
 
     Function WS_Exists(ByVal sheet As String) As Boolean
-        ' 
+
         Dim shtFound As Boolean = False
         Dim ws As Worksheet
 

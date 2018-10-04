@@ -1,9 +1,43 @@
 
 Imports System.IO
-Imports Microsoft.Office.Interop
 Imports Microsoft.Office.Interop.Excel
+Imports System.Text.RegularExpressions
+
 
 Module Utilities
+
+    Sub RegExpTest()
+
+        ' Define a regular expression for repeated words
+        ' requires Namespace System.Text.RegularExpressions for class definitions
+        Dim rx As New Regex("\b(?<word>\w+)\s+(\k<word>)\b")
+
+        ' Define a test string
+        Dim text As String = "The the quick brown fox  fox jumps over the lazy dog dog."
+
+        ' Find matches.
+        Dim matches As MatchCollection = rx.Matches(text)
+
+        ' Report the number of matches found
+        Console.WriteLine("{0} matches found in:" & vbCrLf & "    {1}", matches.Count, text)
+
+        ' Report on each match      
+        Dim groups As GroupCollection
+        For Each match In matches
+            groups = match.Groups
+            Console.WriteLine("'{0}' repeated at positions {1} and {2}", groups("word").Value, groups(0).Index, groups(1).Index)
+        Next match
+
+        Console.ReadLine()
+
+        '// The example produces the following output to the console:
+        '//       3 matches found in
+        '//          The the quick brown fox  fox jumps over the lazy dog dog.
+        '//       'The' repeated at positions 0 and 4
+        '//       'fox' repeated at positions 20 and 25
+        '//       'dog' repeated at positions 50 and 54
+
+    End Sub
 
     Public Sub Clear_Sheet(ByRef ws As Worksheet)
 
