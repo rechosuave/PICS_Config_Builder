@@ -1,5 +1,6 @@
+
 Imports Microsoft.Office.Interop.Excel
-Imports System.Text.RegularExpressions
+
 Module WireData
 
     Public Template_Name As String
@@ -21,103 +22,105 @@ Module WireData
 
     End Sub
 
-    Sub Create_Basic_Wire_Sheets(ByVal templateType As String, ByVal countStr As String)
+    Sub Create_Basic_Wire_Sheets(ByVal sTemplateType As String, ByVal sCountStr As String)
 
-        Dim WireTemplate As String = "Wire_" & templateType & " Template"
-        Dim IOTagsSheet As String = "IOTags - " & templateType
-        Dim MinMaxSheet As String = "MinMax - " & templateType
-        Dim TagItemNum, searchStr, TagName, NewWireSheetName As String
-        Dim InMinCol, InMaxCol, OutMinCol, OutMaxCol As Integer
-        Dim EUMinCol, EUMaxCol, RawMinCol, RawMaxCol, RawFltCol As Integer
-        Dim CurrentRow As Integer, absCount As Integer = Get_Annunciator_Block_Size(WireTemplate)
-        Dim MinMaxShtFound As Boolean = WS_Exists(MinMaxSheet)
-        Dim maxItemCount As Integer = GetMaxItems(WireTemplate)
-        Dim ws As Worksheet = XLpicsWB.Sheets(IOTagsSheet)
-        Dim IOTagsRng As Range = ws.Range("A:A")
-        Dim IOTagsRngStart As Range = ws.Range("A1"), IOTagsNextRng, ItemRow As Range
-        Dim ItemCount As Integer = ws.Application.WorksheetFunction.CountIf(IOTagsRng, countStr)
-        Dim ReqSheets As Integer = ws.Application.WorksheetFunction.RoundUp(ItemCount / maxItemCount, 0)
-        Dim re As New RegExp
+        Dim sWireTemplateWS As String = "Wire_" & sTemplateType & " Template"    ' build worksheet names
+        Dim sIOTagsWS As String = "IOTags - " & sTemplateType
+        Dim sMinMaxWS As String = "MinMax - " & sTemplateType
+        Dim sTagItemNum, sSearchStr, sTagName, sNewWireWS As String
+        Dim iInMinCol, iInMaxCol, iOutMinCol, iOutMaxCol, iRow As Integer
+        Dim iEUMinCol, iEUMaxCol, iRawMinCol, iRawMaxCol, iRawFltCol As Integer
+        Dim iCurrentRow As Integer, iBlkSize As Integer = Get_Annunciator_Block_Size(sWireTemplateWS)
+        Dim bMinMaxShtFound As Boolean = WS_Exists(sMinMaxWS)
+        Dim iMaxItemCount As Integer = GetMaxItems(sWireTemplateWS)     'number of annunciator items in wire template worksheet
+        Dim ws As Worksheet = XLpicsWB.Sheets(sIOTagsWS)
+        Dim rngIOTagsWS As Range = ws.Range("A:A")
+        Dim rngIOTagsWS_Start As Range = ws.Range("A1"), rngIOTagsNext As Range
+        Dim iItemCount As Integer = ws.Application.WorksheetFunction.CountIf(rngIOTagsWS, sCountStr)
+        Dim iReqWireSheets As Integer = ws.Application.WorksheetFunction.RoundUp(iItemCount / iMaxItemCount, 0)
+        Dim fEU_Min, fEU_Max, fRaw_Min, fRaw_Max, fRaw_Flt As Double
+        Dim oRE As Object
 
-        Call Delete_Wire_Sheets(WireTemplate)
+        oRE = CreateObject("vbscript.regexp")    ' create a regular expression
 
-        If MinMaxShtFound Then  ' find columns
+        Call Delete_Wire_Sheets(sWireTemplateWS)
 
-            InMinCol = Find_Column(MinMaxSheet, "InputMin")
-            InMaxCol = Find_Column(MinMaxSheet, "InputMax")
-            OutMinCol = Find_Column(MinMaxSheet, "OutputMin")
-            OutMaxCol = Find_Column(MinMaxSheet, "OutputMax")
+        If bMinMaxShtFound Then  ' find columns
 
-            If templateType = "AIn" Then     ' find columns
+            iInMinCol = Find_Column(sMinMaxWS, "InputMin")
+            iInMaxCol = Find_Column(sMinMaxWS, "InputMax")
+            iOutMinCol = Find_Column(sMinMaxWS, "OutputMin")
+            iOutMaxCol = Find_Column(sMinMaxWS, "OutputMax")
 
-                EUMinCol = Find_Column(WireTemplate, "iAI_EU_Min") + 1
-                EUMaxCol = Find_Column(WireTemplate, "iAI_EU_Max") + 1
-                RawMinCol = Find_Column(WireTemplate, "iAI_Raw_Min") + 1
-                RawMaxCol = Find_Column(WireTemplate, "iAI_Raw_Max") + 1
-                RawFltCol = Find_Column(WireTemplate, "iAI_Raw_Flt") + 1
+            If sTemplateType = "AIn" Then     ' find columns
+
+                iEUMinCol = Find_Column(sWireTemplateWS, "iAI_EU_Min") + 1
+                iEUMaxCol = Find_Column(sWireTemplateWS, "iAI_EU_Max") + 1
+                iRawMinCol = Find_Column(sWireTemplateWS, "iAI_Raw_Min") + 1
+                iRawMaxCol = Find_Column(sWireTemplateWS, "iAI_Raw_Max") + 1
+                iRawFltCol = Find_Column(sWireTemplateWS, "iAI_Raw_Flt") + 1
 
             End If
 
         End If
 
-        For shtIndex = 1 To ReqSheets     ' add a new wire worksheet(s) to PICS workbook and populate data into worksheet
+        For shtIndex = 1 To iReqWireSheets     ' add a new wire worksheet(s) to PICS workbook and populate data into worksheet
 
-            NewWireSheetName = Strings.Replace(WireTemplate, " Template", "_") & shtIndex
-            XLpicsWB.Sheets(WireTemplate).Copy(Before:=XLpicsWB.Sheets("Wire_AIn Template"))
-            ws = XLpicsWB.ActiveSheet.Unprotect
-            ws.Name = NewWireSheetName      ' rename copied worksheet
-            ws.Range("A1").Cells.Value = "_Wire_" & templateType & "_" & shtIndex
+            sNewWireWS = Strings.Replace(sWireTemplateWS, " Template", "_") & shtIndex
+            XLpicsWB.Sheets(sWireTemplateWS).Copy(Before:=XLpicsWB.Sheets("Wire_AIn Template"))
+            XLpicsWB.ActiveSheet.Unprotect
+            ws = XLpicsWB.ActiveSheet
+            ws.Name = sNewWireWS      ' rename copied worksheet
+            ws.Range("A1").Cells.Value = "_Wire_" & sTemplateType & "_" & shtIndex
 
-            For i = 1 To maxItemCount   ' loop for number of annunciators on new wire worksheet to populate with tag item data
+            For i = 1 To iMaxItemCount   ' loop for number of annunciators on new wire worksheet to populate with tag item data
 
-                IOTagsNextRng = XLpicsWB.Sheets(IOTagsSheet).Range("A:A").Find(What:=countStr, After:=IOTagsRngStart)     ' if nexRng is Nothing - skip loop
+                rngIOTagsNext = XLpicsWB.Sheets(sIOTagsWS).Range("A:A").Find(What:=sCountStr, After:=rngIOTagsWS_Start)     ' if next range is Nothing - skip loop
 
-                If Not (IOTagsNextRng Is Nothing) Then        ' c2-10-02-2018: condition statement added since if range expression "netRng.Row" is nothing will crash loop
+                If Not (rngIOTagsNext Is Nothing) Then        ' c2-10-02-2018: condition statement added since if range expression "netRng.Row" is nothing will crash loop
                     ' Is there another tag item to add to annunciator block
-                    If IOTagsNextRng.Row > IOTagsRngStart.Row Then
+                    If rngIOTagsNext.Row > rngIOTagsWS_Start.Row Then
 
-                        TagItemNum = Right("00" & i, 2)        ' assign a IO tag item #
+                        sTagItemNum = Right("00" & i, 2)        ' assign a IO tag item #
 
-                        searchStr = Replace(countStr, "*", "")
-                        searchStr = Replace(searchStr, "?", "\w")
+                        sSearchStr = Replace(sCountStr, "*", "")
+                        sSearchStr = Replace(sSearchStr, "?", "\w")
 
-                        With re
+                        With oRE
                             .Global = True
                             .Multiline = True
                             .IgnoreCase = False
-                            .Pattern = searchStr
+                            .Pattern = sSearchStr
                         End With
 
-                        TagName = re.Replace(IOTagsNextRng.Value, "")
+                        sTagName = oRE.Replace(rngIOTagsNext.Value, "")
 
-                        ws.Cells.Replace(What:=Template_Name & TagItemNum, Replacement:=TagName, LookAt:=XlLookAt.xlPart,
+                        ws.Cells.Replace(What:=Template_Name & sTagItemNum, Replacement:=sTagName, LookAt:=XlLookAt.xlPart,
                                              SearchOrder:=XlSearchOrder.xlByRows, MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
 
-                        If MinMaxShtFound Then
-                            If templateType = "AIn" Then
+                        If bMinMaxShtFound Then
+                            If sTemplateType = "AIn" Then
 
-                                Dim EU_Min, EU_Max, Raw_Min, Raw_Max, Raw_Flt As Double
+                                iCurrentRow = iBlkSize * (i - 1) + 1
+                                iRow = XLpicsWB.Sheets(sMinMaxWS).Range("A:A").Find(rngIOTagsNext.Value).Row
+                                fEU_Min = XLpicsWB.Sheets(sMinMaxWS).Cells(iRow, iInMinCol).Value
+                                fEU_Max = XLpicsWB.Sheets(sMinMaxWS).Cells(iRow, iInMaxCol).Value
+                                fRaw_Min = XLpicsWB.Sheets(sMinMaxWS).Cells(iRow, iOutMinCol).Value
+                                fRaw_Max = XLpicsWB.Sheets(sMinMaxWS).Cells(iRow, iOutMaxCol).Value
+                                fRaw_Flt = 0.8 * fRaw_Min
 
-                                CurrentRow = absCount * (i - 1) + 1
-                                ItemRow = XLpicsWB.Sheets(MinMaxSheet).Range("A:A").Find(IOTagsNextRng.Value).Row
-                                EU_Min = XLpicsWB.Sheets(MinMaxSheet).Cells(ItemRow, InMinCol).Value
-                                EU_Max = XLpicsWB.Sheets(MinMaxSheet).Cells(ItemRow, InMaxCol).Value
-                                Raw_Min = XLpicsWB.Sheets(MinMaxSheet).Cells(ItemRow, OutMinCol).Value
-                                Raw_Max = XLpicsWB.Sheets(MinMaxSheet).Cells(ItemRow, OutMaxCol).Value
-                                Raw_Flt = 0.8 * Raw_Min
-
-                                If Raw_Max > 0 Then
-                                    ws.Cells(CurrentRow, EUMinCol).Cells.Value = EU_Min
-                                    ws.Cells(CurrentRow, EUMaxCol).Cells.Value = EU_Max
-                                    ws.Cells(CurrentRow, RawMinCol).Cells.Value = Raw_Min
-                                    ws.Cells(CurrentRow, RawMaxCol).Cells.Value = Raw_Max
-                                    ws.Cells(CurrentRow, RawFltCol).Cells.Value = Raw_Flt
+                                If fRaw_Max > 0 Then
+                                    ws.Cells(iCurrentRow, iEUMinCol).Cells.Value = fEU_Min
+                                    ws.Cells(iCurrentRow, iEUMaxCol).Cells.Value = fEU_Max
+                                    ws.Cells(iCurrentRow, iRawMinCol).Cells.Value = fRaw_Min
+                                    ws.Cells(iCurrentRow, iRawMaxCol).Cells.Value = fRaw_Max
+                                    ws.Cells(iCurrentRow, iRawFltCol).Cells.Value = fRaw_Flt
                                 End If
 
                             End If
                         End If
 
-                        IOTagsRngStart = IOTagsNextRng.Offset(1, 0)
+                        rngIOTagsWS_Start = rngIOTagsNext.Offset(1, 0)
 
                     End If
 
@@ -125,8 +128,8 @@ Module WireData
 
             Next i
 
-            Call ValidateOPC1(NewWireSheetName)
-            Call ReplaceOPC1(NewWireSheetName)
+            Call ValidateOPC1(sNewWireWS)
+            Call ReplaceOPC1(sNewWireWS)
 
         Next shtIndex
 
@@ -154,7 +157,7 @@ Module WireData
 
     Private Function GetMaxItems(ByRef sheet As String) As Integer
 
-        '  Count the number of Annunciator item blocks on the wire template worksheet 
+        '  Count the number of Annunciator blocks on the wire template worksheet 
         '  to populate on the new wire worksheet that will be exported to PICS simulator as .wir file
         Dim toSub As String
         Dim lastRng As Range
@@ -189,14 +192,17 @@ Module WireData
     Sub ValidateOPC1(ByRef WireSht As String)
 
         ' Pre-Pass OPC1 tags for existence
-        ' Checks against SimData sheet for existence of OPC1 tag that it is looking to use
+        ' Checks SimData worksheet for existence of OPC1 tag that it is looking to use
         Dim output, parseArr(), parse, checkStr, tag As String
         Dim searchRng As Range, firstMatch As Range = Nothing
         Dim ws As Worksheet = XLpicsWB.Sheets(WireSht)
-        Dim oRE As New RegExp
+        'Dim oRE As New RegExp
+        Dim oRE As Object
+        oRE = CreateObject("vbscript.regexp")
+
         Dim oMatch As Object
 
-        With oRE     ' routine RegExp is a concise and flexible notation for finding and replacing patterns of text
+        With oRE     ' vbscript object RegExp is a concise and flexible notation for finding and replacing patterns of text
             .Global = False
             .Multiline = False
             .IgnoreCase = False
@@ -212,16 +218,16 @@ Module WireData
             parse = searchRng.Value
             output = ""
 
-            ' Check if it needs to be split
+            ' Check if it string needs to be split
             If InStr(parse, "|") > 0 Then
                 parseArr = parse.Split("|")
             Else
                 parseArr = {parse}
             End If
 
-            For Each checkStr In parseArr
+            For Each checkStr In parseArr       ' check if using string 1 or 2 (pipe | delimited)
                 oMatch = oRE.Execute(checkStr)
-                tag = oMatch.ToString
+                tag = oMatch(0).value
                 tag = Replace(tag, "OPC1.", "")
 
                 If Is_Sim_Data(tag) Then
@@ -231,9 +237,9 @@ Module WireData
 
             Next checkStr
 
-            searchRng.Value = output
+            searchRng.Value = output        ' set IO tag name to "" if item block is not used (no annunciator)
 
-            If firstMatch Is Nothing Then
+            If firstMatch Is Nothing Then       ' end loop is 1st tag found again
                 firstMatch = searchRng
             ElseIf searchRng.Value = firstMatch.Value Then
                 searchRng = Nothing
@@ -251,7 +257,6 @@ Module WireData
 
         ws = XLpicsWB.Sheets(sht)
         ws.UsedRange.Select()
-
         ws.Cells.Replace(What:="OPC1.", Replacement:=CPU_Name & ".", LookAt:=XlLookAt.xlPart, SearchOrder:=XlSearchOrder.xlByRows,
                             MatchCase:=False, SearchFormat:=False, ReplaceFormat:=False)
 
@@ -290,7 +295,7 @@ Module WireData
         Dim shtName As String
         Dim ws As Worksheet
 
-        For i = 1 To 100     'Increase this value if there are ever more than 15 Wire Sheets
+        For i = 1 To 15     'Increase this value if there are ever more than 15 Wire Sheets
             shtName = Replace(shtTemplate, " Template", "_") & i
 
             ' Delete existing worksheets if necessary
@@ -311,8 +316,6 @@ Module WireData
 
         Dim savePath As String
 
-        wb.Application.DisplayAlerts = False
-
         savePath = outFolder & "\"
 
         Save_Sheets("AIn", savePath)
@@ -323,8 +326,6 @@ Module WireData
         Save_Sheets("ValveSO", savePath)
         Save_Sheets("VSD", savePath)
 
-        wb.Application.DisplayAlerts = True
-
     End Sub
 
     Private Sub Save_Sheets(ByVal typeStr As String, ByRef savePath As String)
@@ -332,21 +333,20 @@ Module WireData
         Dim i As Integer = 1
         Dim wsName As String = "Wire_" & typeStr & "_" & i
         Dim wb, newBook As Workbook
-        Dim ws, newSht As Worksheet
+        Dim ws As Worksheet
 
         wb = XLpicsWB
 
         Do While WS_Exists(wsName)
 
-            newBook = XLApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet)  ' create new workbook 
+            newBook = XLApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet)  ' create a new workbook for each wire file
+            newBook.Application.DisplayAlerts = False
             ws = wb.Sheets(wsName)      ' select worksheet to copy to new workbook
             ws.Copy(Before:=newBook.Sheets(1))
-            newSht = newBook.Sheets(1)
-            newSht.Delete()
-            newSht = newBook.ActiveSheet
-            newSht.Name = wsName        ' rename new worksheet in new workbook
-
+            newBook.Worksheets(1).Range("A1").EntireRow.Insert
+            newBook.Worksheets(1).Range("A1").Value = ";PICS for Windows - Device Wiring Export V1.10"
             newBook.SaveAs(savePath & wsName & ".wir", XlFileFormat.xlTextWindows)
+            newBook.Application.DisplayAlerts = True
             newBook.Close(False)
 
             i = i + 1

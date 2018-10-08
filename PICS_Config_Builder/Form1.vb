@@ -11,12 +11,6 @@ Public Class Form1
 
     End Sub
 
-    Private Sub BtnClearAllSheets_Click(sender As Object, e As EventArgs) Handles BtnClearAllSheets.Click
-
-        Clear_All_Sheets()
-
-    End Sub
-
     Private Sub BtnExit_Click(sender As Object, e As EventArgs) Handles BtnExit.Click
 
         Close()

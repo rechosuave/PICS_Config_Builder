@@ -1,3 +1,4 @@
+
 Imports Microsoft.Office.Interop.Excel
 
 Module SimData
@@ -32,7 +33,7 @@ Module SimData
         IOPrefix = "IOTags - "
         MinMaxPrefix = "MinMax - "
 
-        'Source data is in sourceSheet, DataSheet is the destination
+        'Source data is in sourceSheet for copy to destination DataSheet
         Dim ws As Worksheet = XLpicsWB.Sheets(sourceSheet)
         Dim SourceRowCount As Integer = ws.Cells(ws.Cells.Rows.Count, "A").End(XlDirection.xlUp).Row
         Dim PLCBaseTag_Col As Integer = Find_Header_Column(sourceSheet, "PLCBaseTag")
@@ -424,8 +425,9 @@ Module SimData
 
     End Function
 
-    Function WS_Exists(ByVal sheet As String) As Boolean
+    Function WS_Exists(ByRef sheet As String) As Boolean
 
+        ' Check if worksheet exists
         Dim shtFound As Boolean = False
         Dim ws As Worksheet
 

@@ -1,43 +1,8 @@
 
 Imports System.IO
 Imports Microsoft.Office.Interop.Excel
-Imports System.Text.RegularExpressions
-
 
 Module Utilities
-
-    Sub RegExpTest()
-
-        ' Define a regular expression for repeated words
-        ' requires Namespace System.Text.RegularExpressions for class definitions
-        Dim rx As New Regex("\b(?<word>\w+)\s+(\k<word>)\b")
-
-        ' Define a test string
-        Dim text As String = "The the quick brown fox  fox jumps over the lazy dog dog."
-
-        ' Find matches.
-        Dim matches As MatchCollection = rx.Matches(text)
-
-        ' Report the number of matches found
-        Console.WriteLine("{0} matches found in:" & vbCrLf & "    {1}", matches.Count, text)
-
-        ' Report on each match      
-        Dim groups As GroupCollection
-        For Each match In matches
-            groups = match.Groups
-            Console.WriteLine("'{0}' repeated at positions {1} and {2}", groups("word").Value, groups(0).Index, groups(1).Index)
-        Next match
-
-        Console.ReadLine()
-
-        '// The example produces the following output to the console:
-        '//       3 matches found in
-        '//          The the quick brown fox  fox jumps over the lazy dog dog.
-        '//       'The' repeated at positions 0 and 4
-        '//       'fox' repeated at positions 20 and 25
-        '//       'dog' repeated at positions 50 and 54
-
-    End Sub
 
     Public Sub Clear_Sheet(ByRef ws As Worksheet)
 
@@ -137,35 +102,31 @@ Module Utilities
         pathName = ActiveWorkbook.Path
 
         topFolder = "\PICS_Files"
-        subFolder = "\" & ImportData.CPU_Name & Format(Now(), "_yyyymmdd_HhNnSs")
+        subFolder = "\" & CPU_Name & Format(Now(), "_yyyyMMdd_HHmmss")
 
         outFolder = pathName & topFolder
-        If Len(Dir(outFolder, vbDirectory)) = 0 Then
-            MkDir(outFolder)
-        End If
-
+        If Len(Dir(outFolder, vbDirectory)) = 0 Then MkDir(outFolder)
         outFolder = outFolder & subFolder
-        If Len(Dir(outFolder, vbDirectory)) = 0 Then
-            MkDir(outFolder)
-        End If
+        If Len(Dir(outFolder, vbDirectory)) = 0 Then MkDir(outFolder)
 
-        Create_Output_Folder = outFolder
+        Return outFolder
 
     End Function
 
-    Sub Export_CSV(ByRef outFolder As String, ByVal sheetStr As String, ByVal saveName As String)
+    Public Sub Export_CSV(ByRef outFolder As String, ByVal sheetStr As String, ByVal saveName As String)
 
-        ' Declare variables, create new Excel workbook object
-        Dim wb As Workbook = XLApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet)  ' create new workbook
-        Dim ws As Worksheet = wb.ActiveSheet
+        ' Declare variables, create new Excel workbook object (csv extension)
+        Dim newBook As Workbook = XLApp.Workbooks.Add(XlWBATemplate.xlWBATWorksheet)  ' create new workbook
+        Dim newWS As Worksheet = newBook.ActiveSheet
+        Dim ws = XLpicsWB.Sheets(sheetStr)      ' select worksheet to copy to new workbook
         Dim savePath As String = outFolder & "\" & saveName
 
-        ws.Name = sheetStr
-        wb.Application.DisplayAlerts = True
-        wb.SaveAs(Filename:=savePath, FileFormat:=XlFileFormat.xlCSV)
-        wb.Application.DisplayAlerts = True
+        ws.Copy(Before:=newBook.Sheets(1))  ' copy worksheet
 
-        wb.Close(False)
+        newBook.Application.DisplayAlerts = False
+        newBook.SaveAs(Filename:=savePath, FileFormat:=XlFileFormat.xlCSV)
+        newBook.Application.DisplayAlerts = True
+        newBook.Close(False)
 
     End Sub
 

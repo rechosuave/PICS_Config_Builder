@@ -28,9 +28,9 @@ Module ImportData
 
         Call Validate_PICS_WB()    ' Validate or add required worksheets to PICS config builder file
 
-        If Not IsNothing(XLTemplateWB) Then ' no wire template file selected
+        ' If Not IsNothing(XLTemplateWB) Then ' no wire template file selected
 
-            Call Import_Data()         ' Import "IO Sheets" worksheet from Project file into "IO Sheets" in PICS file
+        Call Import_Data()         ' Import "IO Sheets" worksheet from Project file into "IO Sheets" in PICS file
 
             Call Generate_Sim_Data()    ' Build OPC tags
             Call Generate_Memory_Data() ' Build Global tags
@@ -43,23 +43,16 @@ Module ImportData
             Call Export_CSV(outFolder, "MemoryData", "GLOBAL_Tags.csv")
             Call Export_Wire_Data(XLpicsWB, outFolder)
 
-        End If
+        '    End If
 
         If IsFileOpen(xlProjectFN) Then        ' is the project file workbook still open
-            If XLProjectWB.Name.Contains(".xlsm") Then  'Re-enable workbook macros security settings prior to closing Project file
-                XLProjectWB.Application.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
-                XLProjectWB.Close(SaveChanges:=False)
-            Else
-                XLProjectWB.Close(SaveChanges:=False)
-
-            End If
+            XLProjectWB.Close(SaveChanges:=False)
         End If
 
         If IsFileOpen(XLpicsFN) Then        ' is the PICS Config file workbook still open
-            If XLpicsWB.Name.Contains(".xlsm") Then     'Re-enable Excel application macros security settings prior to closing file
-                Dim ws As Worksheet = XLpicsWB.Sheets(2)
+            If XLpicsFN.Contains(".xlsm") Then     'Re-enable Excel application macros security settings prior to closing file
+                Dim ws As Worksheet = XLpicsWB.Sheets(2)    ' return to "IO Sheets" worksheet
                 ws.Activate()
-                XLpicsWB.AutomationSecurity = Microsoft.Office.Core.MsoAutomationSecurity.msoAutomationSecurityLow
             Else
                 Dim ws As Worksheet = XLpicsWB.Sheets(1)
                 ws.Activate()
@@ -81,7 +74,6 @@ Module ImportData
         picsBuilder = XLpicsWB.Name
         projectBuilder = XLProjectWB.Name
 
-        CPU_Name = XLProjectWB.Sheets("Instructions").Range("C3").Value
         XLProjectWB.Sheets(shtName).UsedRange.Copy          ' copy from Project worksheet to clipboard
         ws.Range("A1").PasteSpecial(XlPasteType.xlPasteValues)  ' paste from clipboard to PICS worksheet
 
@@ -91,7 +83,10 @@ Module ImportData
 
         ' Add CPU_PREFIX to form title
         If Form1.CPU_PREFIX.Text = "" Then
+            CPU_Name = XLProjectWB.Sheets("Instructions").Range("C3").Value
             Form1.CPU_PREFIX.Text = CPU_Name
+        Else
+            CPU_Name = Form1.CPU_PREFIX.Text
         End If
 
         If XLProjectWB.Name.Contains(".xlsm") Then  'Re-enable workbook macros security settings prior to closing Project file

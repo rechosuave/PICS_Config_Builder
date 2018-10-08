@@ -35,14 +35,6 @@ Module Templates
             Call Build_MinMax_VSD_WS()
 
             Call Build_Wire_WS()
-            'Call Build_Wire_AIn_WS()
-            'Call Build_Wire_DIn_WS()
-            'Call Build_Wire_Motor_WS()
-            'Call Build_Wire_ValveC_WS()
-            'Call Build_Wire_ValveMO_WS()
-            'Call Build_Wire_ValveSO_WS()
-            'Call Build_Wire_VSD_WS()
-            'Call Record_WS_Tabs_WS()
 
         End If
 
@@ -890,43 +882,6 @@ Module Templates
         XLTemplateWB.Application.ScreenUpdating = True
         XLTemplateWB.Application.DisplayAlerts = True 'Turn safety alerts back On
         XLTemplateWB.Close(SaveChanges:=False)
-
-    End Sub
-    Sub Build_Wire_AIn_WS()
-
-
-        ' import template from Excel workbook
-
-        'Dim shtName As String = "Wire_AIn Template"
-        'Dim ColName() As String = {"Name", "InputMin", "InputMax", "OutputMin", "OutputMax"}
-        'Dim tabColor As Integer = RGB(0, 51, 102)
-        'Dim shtFound As Boolean = False
-        'Dim letter As Char
-        'Dim ws As Worksheet
-        'Dim shtCount As Integer = XLpicsWB.Sheets.Count
-
-        'For Each ws In XLpicsWB.Sheets      ' does worksheet exist?
-        '    If ws.Name.Equals(shtName) Then
-        '        shtFound = True
-        '        Exit For
-        '    End If
-        'Next
-
-        'If Not shtFound Then        ' create worksheet
-        '    ws = XLpicsWB.Sheets.Add(After:=XLpicsWB.Sheets(shtCount))
-        '    ws.Name = shtName
-        'Else
-        '    Exit Sub  'worksheet already exits - nothing to do
-        'End If
-
-        'For i = 0 To ColName.Count - 1
-        '    letter = Convert.ToChar(65 + i)  ' starting pt is letter "A"
-        '    ws.Range(letter & "1").Value = ColName(i) ' assign value to cells A1, B1,..
-        'Next
-        'With ws.Tab
-        '    .Color = tabColor
-        '    .TintAndShade = 0
-        'End With
 
     End Sub
 
